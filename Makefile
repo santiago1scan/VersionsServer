@@ -1,18 +1,27 @@
-all: main.o sha256.o versions.o
-	gcc -o versions main.o sha256.o versions.o
+# Encuentra todos los archivos .c en el directorio actual y subdirectorios
+SRC := $(shell find . -name '*.c')
 
-main.o: main.c
-	gcc -c -o main.o main.c
+# Genera los nombres de los archivos .o correspondientes
+OBJ := $(SRC:.c=.o)
 
-sha256.o: sha256.c
-	gcc -c -o sha256.o sha256.c
+all: rversions rversionsd
 
-versions.o: versions.c
-	gcc -c -o versions.o versions.c
+#compila version del cliente
+rversions: rversions.o client/versions_client.o common/sha256.o
+	gcc -o rversions rversions.o client/versions_client.o common/sha256.o
+
+#compila version del servidor
+rversionsd: rversionsd.o server/versions_server.o common/sha256.o
+	gcc -o rversionsd rversionsd.o server/versions_server.o common/sha256.o
+
+# Regla genérica para compilar .c a .o
+%.o: %.c
+	gcc -c $< -o $@
 
 clean:
 	rm -f versions *.o
 	rm -rf docs
+	rm rversions rversionsd
 
 clean-repo:
 	rm -rf .versions
@@ -25,4 +34,3 @@ install: all
 
 uninstall:
 	sudo rm -f /usr/local/bin/versions
-
