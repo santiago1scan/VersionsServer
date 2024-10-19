@@ -19,12 +19,6 @@ permita:
 Se deberán crear dos (programas), un programa servidor llamado rversionsd,
 y un programa cliente llamado rversions.
 
-Uso:
-		versions add ARCHIVO "Comentario" : Adiciona una version del archivo al repositorio
-		versions list ARCHIVO             : Lista las versiones del archivo existentes
-        versions list                     : Lista todos los archivos almacenados en el repositorio
-		versions get NUMVER ARCHIVO       : Obtiene una version del archivo del repositorio
-
 ## 1.1. Uso del cliente rversions
     $ ./rversions
     Uso: rversions IP PORT Conecta el cliente a un servidor en la IP y puerto especificados.

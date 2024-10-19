@@ -20,6 +20,7 @@
 
 #include "../common/sha256.h"
 
+#define BUFFER_SIZE 256 /* Default buffer size */
 #define COMMENT_SIZE 80 /** < Longitud del comentario */
 #define HASH_SIZE 256 /**< Longitud del hash incluyendo NULL*/
 #define PATH_MAX 4096 /**< Longitud maxima de una ruta de archivo. */
