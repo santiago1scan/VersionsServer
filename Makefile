@@ -19,9 +19,9 @@ rversionsd: rversionsd.o server/versions_server.o common/sha256.o
 	gcc -c $< -o $@
 
 clean:
-	rm -f versions *.o
+	find . -name '*.o' -exec rm -f {} +
 	rm -rf docs
-	rm rversions rversionsd
+	rm -f rversions rversionsd
 
 clean-repo:
 	rm -rf .versions
