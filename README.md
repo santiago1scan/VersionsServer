@@ -1,7 +1,8 @@
 Elaborado por: 
-Erwin Meza Vega <emezav@unicauca.edu.co> (Codigo base)
-Miguel Angel Calambas Vivas <mangelcvivas@unicauca.edu.co>
-Esteban Santiago Escandon Causaya <estebanescandon@unicauca.edu.co>
+
+- Erwin Meza Vega <emezav@unicauca.edu.co> (Codigo base)
+- Miguel Angel Calambas Vivas <mangelcvivas@unicauca.edu.co>
+- Esteban Santiago Escandon Causaya <estebanescandon@unicauca.edu.co>
 
 # 1 Sistema de Control de Versiones Remoto
 Los Sistemas de Control de Versiones (VCS) permiten guardar el rastro de

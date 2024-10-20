@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/ip.h>
 #include <signal.h>
@@ -34,6 +35,18 @@ void usage();
  * @param sig number of the signal sended
  */
 void handle_terminate(int sig);
+
+/**
+ * @brief infinite loop to receive new users in the server
+ */
+void loop_listening();
+
+/**
+ * @brief Handle user thread to listen the querys of user
+ * @param args its a *void
+ */
+void *handler_user_thread(void *args);
+
 
 /**
  * @brief Structure to save the actives users
@@ -108,8 +121,9 @@ int main(int argc, char *argv[]) {
     }
 
 	printf("> Server listening on port:%d\n", PORT);
-	//TODO logica para conectar a un usuario y asignarle un hilo
-	while(1);
+	
+	loop_listening();
+	
 	exit(EXIT_SUCCESS);
 
 }
@@ -139,5 +153,53 @@ void handle_terminate(int sig){
 	pthread_mutex_destroy(&mutexServer);
 	
 	exit(EXIT_SUCCESS);
+}
+
+void loop_listening(){
+	//TODO logica para conectar a un usuario y asignarle un hilo
+	while(1){
+		//Donde vamos a guardar info de la conexion
+		struct sockaddr_in client_addr;
+		socklen_t client_len = sizeof(client_addr);
+
+		//Bloqueamos esperando conexiond e nuevo usuario
+		int new_client_socket = accept(serverSocket, (struct sockaddr *)&client_addr, &client_len);
+		if(new_client_socket == -1){
+			perror("Error conecting the new user");
+			continue;
+		}
+		//Sacamos la ip del usuario
+		char *client_ip = inet_ntoa(client_addr.sin_addr);
+		printf("Reciving new user with ip %s\n", client_ip);
+
+		//Creamos el hilo que maneja el usuario
+		int *socket_ptr = malloc(sizeof(int));
+		*socket_ptr = new_client_socket;
+		
+		pthread_t thread_id;
+		if(pthread_create(&thread_id, NULL, handler_user_thread, (void*)socket_ptr) != 0){
+			free(socket_ptr);
+			perror("Error creating the thread to the user");
+		}
+		pthread_detach(thread_id);
+
+		//Agregamos de manera segura el socket del nuevo usuario a nuestra estructura
+		pthread_mutex_lock(&mutexServer);
+		size_t i = 0;
+		while ( myServer->socketsUsers[i]>=0)
+			i++;
+		myServer->socketsUsers[i] = new_client_socket;
+		myServer->countUsers++;
+		pthread_mutex_unlock(&mutexServer);
+		
+	}
+	
+}
+
+void *handler_user_thread(void *args){
+	int clientSocket = *(int *)args;
+
+	//TODO Logica para manejar cada usuario
+	
 }
 

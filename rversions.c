@@ -5,16 +5,17 @@
  * @author Miguel Calambas
  * @author Santiago Escandon
  * Sistema de Control de Versiones
- * Uso:
- *      versions add ARCHIVO "Comentario" : Adiciona una version del archivo al repositorio
- *      versions list ARCHIVO             : Lista las versiones del archivo existentes
- *      versions list                     : Lista todos los archivos almacenados en el repositorio
- *      versions get NUMVER ARCHIVO       : Obtiene una version del archivo del repositorio
  */
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <netinet/ip.h>
+#include <signal.h>
+#include <pthread.h>
 
 #include "./client/versions_client.h"
 
@@ -23,56 +24,78 @@
 */
 void usage();
 
+/**
+ * @brief handle the signals to terminate the app
+ * @param sig int of signal
+ */
+void handle_terminate(int sig);
+
+int client_socket; /* socket of the conexion with the server */
+
 int main(int argc, char *argv[]) {
-	struct stat s;
-   // test testt test
-	//Crear el directorio ".versions/" si no existe
-#ifdef __linux__
-	mkdir(VERSIONS_DIR, 0755);
-#elif _WIN32
-	mkdir(VERSIONS_DIR);
-#endif
-
-	// Crea el archivo .versions/versions.db si no existe
-	if (stat(VERSIONS_DB_PATH, &s) != 0) {
-		creat(VERSIONS_DB_PATH, 0755);
-	}
+	signal(SIGINT, handle_terminate);
+	signal(SIGTERM, handle_terminate);
+ 
 	// Validar argumentos de linea de comandos
-	if (argc == 4
-			&& EQUALS(argv[1], "add")) {
-		if (add(argv[2], argv[3]) == VERSION_ERROR) {
-			fprintf(stderr, "No se puede adicionar %s\n", argv[2]);
-		}
-	}else if (argc == 2
-			&& EQUALS(argv[1], "list")) {
-		//Listar todos los archivos almacenados en el repositorio
-		list(NULL);
-	}else if (argc == 3
-			&& EQUALS(argv[1], "list")) {
-		//Listar el archivo solicitado
-		list(argv[2]);
-	}else if (argc == 4
-			&& EQUALS(argv[1], "get")) {
-		int version = atoi(argv[2]);
-		if (version <= 0) {
-			fprintf(stderr, "Numero de version invalido\n");
-			exit(EXIT_FAILURE);
-		}
-		if (!get(argv[3], version)) {
-			fprintf(stderr, "No se puede obtener la version %d de %s\n", version, argv[3]);
-			exit(EXIT_FAILURE);
-		}
-	}else {
+	if(argc != 3){
+		printf("Invalid argumetns\n");
 		usage();
+		exit(EXIT_FAILURE);
+	}
+    //Extraemos y validamos ip y puerto
+    int server_port = atoi(argv[2]);
+	if(server_port == 0){
+		printf("Invalid port\n");
+		usage();
+		exit(EXIT_FAILURE);
+	}
+	const char *server_ip = argv[1];
+
+    //Creamos las estructuras para crear la conexion
+    struct sockaddr_in server_addr;
+    memset(&server_addr, 0, sizeof(server_addr));
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(server_port);
+
+    //Convertimos la ip en el formato necesario
+    if (inet_pton(AF_INET, server_ip, &server_addr.sin_addr) <= 0) {
+        printf("Direccion ip invalida\n");
+		usage();
+        exit(EXIT_FAILURE);
+    }
+
+	//Creamos el socket
+	client_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if(client_socket == -1){
+		perror("Error al crear el socekt");
+		exit(EXIT_FAILURE);
 	}
 
+	if(connect(client_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
+        perror("Error al intentar conectarse con el servidor");
+        close(client_socket);
+        exit(EXIT_FAILURE);
+    }
+	
+	system("clear");
+    printf("Conectado al servidor %s en el puerto %d\n", server_ip, server_port);
+
+	while(1);
 	exit(EXIT_SUCCESS);
 
 }
 
 void usage() {
-	printf("Uso: \n");
-	printf("versions add ARCHIVO \"Comentario\" : Adiciona una version del archivo al repositorio\n");
-	printf("versions list ARCHIVO             : Lista las versiones del archivo existentes\n");
-	printf("versions get numver ARCHIVO       : Obtiene una version del archivo del repositorio\n");
+	printf("Uso: rversions IP PORT Conecta el cliente a un servidor en la IP y puerto especificados.\n");
+	printf("Los comandos, una vez que el cliente se ha conectado al servidor, son los siguientes:\n");
+	printf("add ARCHIVO \"Comentario\" : Adiciona una version del archivo al repositorio\n");
+	printf("list ARCHIVO               : Lista las versiones del archivo existentes\n");
+	printf("list                       : Lista todas las versiones de los archivos existentes\n");
+	printf("get numver ARCHIVO         : Obtiene una version del archivo del repositorio\n");
+}
+
+void handle_terminate(int sig){
+	printf("Ending the client process...\n");
+	close(client_socket);
+	exit(EXIT_SUCCESS);
 }
