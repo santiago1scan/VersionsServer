@@ -35,6 +35,9 @@ int client_socket; /* socket of the conexion with the server */
 int main(int argc, char *argv[]) {
 	signal(SIGINT, handle_terminate);
 	signal(SIGTERM, handle_terminate);
+	char cadena[PATH_MAX];
+    char *token;
+	char order[PATH_MAX], argument2[PATH_MAX], argument3[PATH_MAX];
  
 	// Validar argumentos de linea de comandos
 	if(argc != 3){
@@ -80,7 +83,31 @@ int main(int argc, char *argv[]) {
 	system("clear");
     printf("Conectado al servidor %s en el puerto %d\n", server_ip, server_port);
 
-	while(1);
+	while(1){
+		type_request peticionRequest;
+		scanf("%s %s %s", order, argument2, argument3);
+		if(EQUALS(order, "add")){
+			peticionRequest = ADD;
+
+			//add(argument2, argument3);
+			
+			printf("El CLietnte solicita add");
+		}
+		if(EQUALS(order, "list")){
+			peticionRequest = LIST;
+			//list(argument2);
+			printf("El CLietnte solicita add");
+		}
+		if(EQUALS(order, "get")){
+			peticionRequest = GET;
+			//get(argument2, argument3);
+			printf("El CLietnte solicita add");
+		}
+
+		if(write(client_socket, (void*)peticionRequest, sizeof(int))== -1){
+			printf("Falla escritura");
+		}
+	}
 	exit(EXIT_SUCCESS);
 
 }
