@@ -7,12 +7,12 @@ OBJ := $(SRC:.c=.o)
 all: rversions rversionsd
 
 #compila version del cliente
-rversions: rversions.o client/versions_client.o common/sha256.o
-	gcc -o rversions rversions.o client/versions_client.o common/sha256.o
+rversions: rversions.o client/versions_client.o common/sha256.o common/protocol.o
+	gcc -o rversions rversions.o client/versions_client.o common/sha256.o common/protocol.o
 
 #compila version del servidor
-rversionsd: rversionsd.o server/versions_server.o common/sha256.o
-	gcc -o rversionsd rversionsd.o server/versions_server.o common/sha256.o
+rversionsd: rversionsd.o server/versions_server.o common/sha256.o common/protocol.o
+	gcc -o rversionsd rversionsd.o server/versions_server.o common/sha256.o common/protocol.o
 
 # Regla genérica para compilar .c a .o
 %.o: %.c

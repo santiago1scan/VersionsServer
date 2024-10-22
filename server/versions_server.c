@@ -13,12 +13,12 @@
  * @brief Crea una version en memoria del archivo
  * Valida si el archivo especificado existe y crea su hash
  * @param filename Nombre del archivo
- * @param comment Comentario
+ * @param hash hash of the file
  * @param result Nueva version en memoria
  *
  * @return Resultado de la operacion
  */
-return_code create_version(char * filename, char * comment, file_version * result);
+return_code create_version(char * filename, char * hash, file_version * result);
 
 /**
  * @brief Verifica si existe una version para un archivo
@@ -39,7 +39,7 @@ int version_exists(char * filename, char * hash);
 char *get_file_hash(char * filename, char * hash);
 
 /**
- * @brief Copia un archivo
+ * @brief Crea un arhcivo con la informacion dicha
  *
  * @param source Archivo fuente
  * @param destination Destino
@@ -51,12 +51,12 @@ int copy(char * source, char * destination);
 /**
 * @brief Almacena un archivo en el repositorio
 *
-* @param filename Nombre del archivo
+* @param file info del archivo a guardar
 * @param hash Hash del archivo: nombre del archivo en el repositorio
 *
 * @return 1 si la operacion es exitosa, 0 en caso contrario.
 */
-int store_file(char * filename, char * hash);
+int store_file(char * file, char * hash);
 
 /**
 * @brief Almacena un archivo en el repositorio
@@ -80,7 +80,7 @@ int retrieve_file(char * hash, char * filename);
 int add_new_version(file_version * v);
 
 
-return_code create_version(char * filename, char * comment, file_version * result) {
+return_code create_version(char * filename, char * hash, file_version * result) {
 	file_version v;
 	struct stat statbuff;
 	// Verifica si el archivo existe y es regular
@@ -89,18 +89,11 @@ return_code create_version(char * filename, char * comment, file_version * resul
 
 	if( !S_ISREG(statbuff.st_mode) )
 		return VERSION_ERROR;
-	// Obtiene el hash del archivo que sera el nombre dentro del versionado
-	char *hash = get_file_hash(filename, v.hash);
-	if(hash == NULL)
-		return VERSION_ERROR;
 
 	// Llena la estructura result con los datos del archivo
     strncpy(result->filename, filename, sizeof(result->filename) - 1);
     result->filename[sizeof(result->filename) - 1] = '\0'; 
 
-    strncpy(result->comment, comment, sizeof(result->comment) - 1);
-    result->comment[sizeof(result->comment) - 1] = '\0';
-	
 	strncpy(result->hash, hash, sizeof(result->hash) - 1);
 	result->hash[sizeof(result->hash) - 1] = '\0';
 
@@ -108,24 +101,72 @@ return_code create_version(char * filename, char * comment, file_version * resul
 
 }
 
-return_code add(char * filename, char * comment) {
-
+return_code add(int socket) {
 	file_version v;
 
-	// 1. Crea la nueva version en memoria
+	//1.Resibir la informacion de nombre y hash 
+	size_t size_info = sizeof(struct file_request);
+	struct file_request *info_file = malloc(size_info);
 
-	create_version(filename, comment, &v);
-	// 2. Verifica si ya existe una version con el mismo hash
-	if(version_exists(filename, v.hash) == 1)
+	size_t bytes_read = read(socket, info_file, size_info);
+	
+	//Validamos que el estado sea correcto
+	return_code_protocol state= validateRead( bytes_read);
+	if( state != ALL_OK)
+		return state;
+	//Crea la nueva version en memoria
+	create_version(info_file->pathFile, info_file->hashFile, &v);
+	
+	//2.Validar si existe, y dar respuesta
+
+	size_t existVersion = version_exists(info_file->pathFile, v.hash);
+
+	//Respondemos si existe el usuario
+	state =validateWrite(write(socket, (void *)existVersion, sizeof(int))); 
+	if( state != ALL_OK)
+		return state;
+
+	//Si existe acabamos la ejecucion
+	if(existVersion == 1)
 		return VERSION_ALREADY_EXISTS;
-	// 3. Almacena el archivo en el repositorio.
-	if( store_file(filename, v.hash) != 1)
-		return VERSION_ERROR;
-	// 4. Agrega un nuevo registro al archivo versions.db
-	if(add_new_version(&v) != 1)
-		return VERSION_ERROR;
+	
+	//3.Resibir lel tamanio del archivo con el comentario
+	size_t size_file_transfer = sizeof(struct file_transfer);
+	struct file_transfer *info_file_transfer = malloc(size_file_transfer);
 
+	bytes_read = read(socket, info_file_transfer, size_file_transfer);
+
+	state = validateRead(bytes_read);
+	if(state != ALL_OK)
+		state;
+
+	//4.Resibir el archivo 
+
+	char file[info_file_transfer->filseSize];
+	bytes_read = read(socket, file, info_file_transfer->filseSize);
+
+	state = validateRead(bytes_read);
+	if(state!= ALL_OK)
+		return state;
+	
+	strncpy(v.comment, info_file_transfer->comment, sizeof(v.comment) - 1);
+	v.comment[sizeof(v.comment) - 1] = '\0';
+
+	//Almacena el archivo en el repositorio.
+	if( store_file(info_file->pathFile, v.hash) != 1){
+		validateRead(write(socket, VERSION_ERROR, sizeof(return_code_protocol)));
+		
+		return VERSION_ERROR;
+	}
+	//Agrega un nuevo registro al archivo versions.db
+	if(add_new_version(&v) != 1){
+		validateRead(write(socket, VERSION_ERROR, sizeof(return_code_protocol)));
+		return VERSION_ERROR;
+	}
+
+	//5.Responder el estado de si se guardon
 	// Si la operacion es exitosa, retorna VERSION_ADDED
+	validateRead(write(socket, (void *) ALL_OK, sizeof(return_code_protocol)));
 	return VERSION_ADDED;
 }
 
@@ -147,9 +188,17 @@ int add_new_version(file_version * v) {
 	return 1;
 }
 
+void list(int socket) {
+	//1. Resibimos la informacion del archivo
+	char filename[PATH_MAX];
 
-void list(char * filename) {
+	size_t bytes_read = read(socket, filename, PATH_MAX);
 
+	return_code_protocol state = validateRead(bytes_read);
+
+	if(state != ALL_OK)
+		return;
+	
 	//Abre el la base de datos de versiones (versions.db)
 	FILE * fp = fopen(".versions/versions.db", "r");
 	file_version  r;
@@ -159,6 +208,8 @@ void list(char * filename) {
 
 	//Leer hasta el fin del archivo 
 	int cont = 1;
+	size_t size_message =sizeof(int) + PATH_MAX + COMMENT_SIZE + HASH_SIZE;
+	char message[size_message];
 	while(!feof(fp)){
 		
 		//Realizar una lectura y retornar
@@ -166,18 +217,27 @@ void list(char * filename) {
 			break;
 		}
 
-		if(filename == NULL){
+		if(strcmp(filename, "") ==0){
 			//Si filename es NULL, muestra todos los registros.
-			printf("%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
+			snprintf(message, size_message, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
 			cont = cont + 1;
 		
 		}else if(strcmp(r.filename,filename)==0){
-			printf("%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
+			snprintf(message, size_message, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
 			cont = cont + 1;
 		}
+
+		state = write(socket, message, size_message);
+		if(state != ALL_OK)
+			break;
 		//Si el registro corresponde al archivo buscado, imprimir
 		//Muestra los registros cuyo nombre coincide con filename.
 	}	
+
+	snprintf(message, size_message, " ");
+
+	write(socket, message, size_message);
+
 	fclose(fp);
 }
 
@@ -200,36 +260,27 @@ char *get_file_hash(char * filename, char * hash) {
 }
 
 int copy(char * source, char * destination) {
-	// Copia el contenido de source a destination (se debe usar open-read-write-close, o fopen-fread-fwrite-fclose)
-	FILE *src, *dest;
-    char buffer[1024];
-    size_t bytesRead;
+    int dest_fd;
+    ssize_t bytesWritten;
+    size_t source_len = strlen(source);
 
-    // Abre el archivo fuente en modo lectura binaria
-    src = fopen(source, "rb");
-    if (src == NULL)
-        return 0; 
-
-    // Abre el archivo destino en modo escritura binaria
-    dest = fopen(destination, "wb");
-    if (dest == NULL) {
-        fclose(src);
-        return 0; 
+    // Abre el archivo destino en modo escritura (crea el archivo si no existe)
+    dest_fd = open(destination, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (dest_fd == -1) {
+        perror("Error al abrir el archivo destino");
+        return 0;
     }
 
-    // Lee del archivo fuente y escribe en el archivo destino
-    while ((bytesRead = fread(buffer, 1, sizeof(buffer), src)) > 0) {
-        if (fwrite(buffer, 1, bytesRead, dest) != bytesRead) {
-            perror("Error al escribir en el archivo destino");
-            fclose(src);
-            fclose(dest);
-            return 0;
-        }
+    // Escribe el contenido de source en el archivo destino
+    bytesWritten = write(dest_fd, source, source_len);
+    if (bytesWritten != source_len) {
+        perror("Error al escribir en el archivo destino");
+        close(dest_fd);
+        return 0;
     }
 
-    // Cierra ambos archivos
-    fclose(src);
-    fclose(dest);
+    // Cierra el archivo destino
+    close(dest_fd);
 
     return 1;
 }
@@ -268,7 +319,9 @@ int version_exists(char * filename, char * hash) {
 	return 0;
 }
 
-int get(char * filename, int version) {
+int get(int socket) {
+	int version;
+	char filename[PATH_MAX];
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente
 	file_version r;
@@ -294,10 +347,10 @@ int get(char * filename, int version) {
 
 }
 
-int store_file(char * filename, char * hash) {
+int store_file(char * file, char * hash) {
 	char dst_filename[PATH_MAX];
 	snprintf(dst_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return copy(filename, dst_filename);
+	return copy(file, dst_filename);
 }
 
 int retrieve_file(char * hash, char * filename) {

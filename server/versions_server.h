@@ -54,30 +54,23 @@ typedef enum {
 
 /**
  * @brief Adiciona un archivo al repositorio.
- *
- * @param filename Nombre del archivo a adicionar
- * @param comment Comentario de la version actual
- *
+ * @param socket socket ha comunicar
  * @return Codigo de la operacion
  */
-return_code add(char * filename, char * comment);
+return_code add(int socket);
 
 /**
  * @brief Lista las versiones de un archivo.
- *
- * @param filename Nombre del archivo, NULL para listar todo el repositorio.
+ * @param socket socket ha comunicar
  */
-void list(char * filename);
+void list(int socket);
 
 /**
  * @brief Obtiene una version del un archivo.
  * Sobreescribe la version existente.
- *
- * @param filename Nombre de archivo.
- * @param version Numero secuencial de la version.
- *
+ * @param socket socket ha comunicar
  * @return 1 en caso de exito, 0 si ocurre un error.
  */
-int get(char * filename, int version);
+int get();
 
 #endif

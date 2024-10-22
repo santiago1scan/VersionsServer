@@ -199,7 +199,37 @@ void loop_listening(){
 void *handler_user_thread(void *args){
 	int clientSocket = *(int *)args;
 
-	//TODO Logica para manejar cada usuario
+	size_t size_struct = sizeof(struct first_request); 
+	struct first_request *request = malloc(size_struct);
+
+	while (1)
+	{
+		//Leemos la estructura de la priemra peticion
+		size_t bytes_read = read(clientSocket, request, size_struct);
+		
+		if( bytes_read == -1)
+            break;
+        else if( bytes_read ==0){
+            printf("Un cliente se ha desconectado\n\n");
+            break;
+        }
+
+		switch (request->request)
+		{
+		case ADD:
+			add(clientSocket);
+			break;
+		case LIST:
+			list(clientSocket);
+			break;
+		case GET:
+			get(clientSocket);
+			break;
+		}
+
+	}
 	
+	close(clientSocket);
+	free(request);
 }
 

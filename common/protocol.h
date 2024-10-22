@@ -51,6 +51,13 @@ struct file_transfer{
     char comment[COMMENT_SIZE]; /*!< Comment of the file (optional)*/
 };
 
+typedef enum {
+	ERROR, /*!< Error no especificado */
+	VERSION_EXISTS, /*!< Version ya existe */
+    ALL_OK, /**<! Operacion succesfully */
+	/* .. */
+}return_code_protocol;
+
 /**
  * @brief Start the protocol for send a file
  * @param socket socket to send the file
@@ -64,3 +71,18 @@ int send_file(int socket);
  * @return 0 en caso de exito, -1 en caso de fallido
  */
 int receive_file(int socket, char **filedata, struct file_request *information);
+
+
+/**
+ * @brief Validate the response of write and return a apropiate return
+ * @param response return of write
+ * @return the state of the response
+ */
+return_code_protocol validateWrite(int response);
+
+/**
+ * @brief validate the response of a read
+ * @param response the response of a read
+ * @return an apropiate respose code
+ */
+return_code_protocol validateRead(int response);
