@@ -53,20 +53,23 @@ int copy(char * source, char * destination);
 *
 * @param file info del archivo a guardar
 * @param hash Hash del archivo: nombre del archivo en el repositorio
-*
+* @param socket socket ha comunicar
+* @param sizeFile tamanio del archivo
 * @return 1 si la operacion es exitosa, 0 en caso contrario.
 */
-int store_file(char * file, char * hash);
+int store_file(char * file, char * hash, int socket, int sizeFile);
 
 /**
 * @brief Almacena un archivo en el repositorio
 *
 * @param hash Hash del archivo: nombre del archivo en el repositorio
 * @param filename Nombre del archivo
+* @param sizeFile tamanio del archivo
+* @param socket socket ha comunicar
 * 
 * @return 1 si la operacion es exitosa, 0 en caso contrario.
 */
-int retrieve_file(char * hash, char * filename);
+int retrieve_file(char * hash, int socket ,int sizeFile);
 
 /**
  * @brief Adiciona una nueva version de un archivo.
@@ -153,7 +156,7 @@ return_code add(int socket) {
 	v.comment[sizeof(v.comment) - 1] = '\0';
 
 	//Almacena el archivo en el repositorio.
-	if( store_file(info_file->pathFile, v.hash) != 1){
+	if( store_file(info_file->pathFile, v.hash, socket, info_file_transfer->filseSize) != 1){
 		validateRead(write(socket, VERSION_ERROR, sizeof(return_code_protocol)));
 		
 		return VERSION_ERROR;
@@ -166,7 +169,8 @@ return_code add(int socket) {
 
 	//5.Responder el estado de si se guardon
 	// Si la operacion es exitosa, retorna VERSION_ADDED
-	validateRead(write(socket, (void *) ALL_OK, sizeof(return_code_protocol)));
+	    return_code_protocol response = ALL_OK; // Asegúrate de que ALL_OK esté correctamente inicializado
+    validateRead(write(socket, &response, sizeof(return_code_protocol)));
 	return VERSION_ADDED;
 }
 
@@ -320,8 +324,23 @@ int version_exists(char * filename, char * hash) {
 }
 
 int get(int socket) {
-	int version;
+	//1.Resibir la informacion de nombre y version 
+	size_t size_info = sizeof(struct file_request);
+	struct file_request *info_file = malloc(size_info);
+
+	size_t bytes_read = read(socket, info_file, size_info);
+	
+	//Validamos que el estado sea correcto
+	return_code_protocol state= validateRead( bytes_read);
+	if( state != ALL_OK)
+		return state;
+	
+	int version = info_file->version;
+
+	//2. Respondemos con al longitud del archivo
 	char filename[PATH_MAX];
+	strncpy(filename, info_file->pathFile, PATH_MAX - 1);
+	filename[PATH_MAX - 1] = '\0'; // Asegúrate de que la cadena esté terminada en nulo
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente
 	file_version r;
@@ -329,6 +348,22 @@ int get(int socket) {
 
 	if( fp == NULL)
 		return 0;
+
+	// Obtiene la longitud del archivo
+	struct stat st;
+	if (stat(filename, &st) != 0) {
+		fclose(fp);
+		return VERSION_ERROR;
+	}
+	off_t file_size = st.st_size;
+
+	// Envia la longitud del archivo al cliente
+	state = validateWrite(write(socket, &file_size, sizeof(off_t)));
+	if (state != ALL_OK) {
+		fclose(fp);
+		return state;
+	}
+
 	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
 	int cont = 1;
 	while(!feof(fp)){
@@ -337,7 +372,7 @@ int get(int socket) {
 		//Si el registro corresponde al archivo buscado, lo restauramos
 		if(strcmp(r.filename,filename)==0){
 			if(cont == version){
-				if(!retrieve_file(r.hash, r.filename));
+				if(!retrieve_file(r.hash, socket,file_size));
 					return 1;
 			}
 			cont++;		
@@ -347,15 +382,15 @@ int get(int socket) {
 
 }
 
-int store_file(char * file, char * hash) {
+int store_file(char * file, char * hash, int socket, int sizeFile) {
 	char dst_filename[PATH_MAX];
 	snprintf(dst_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return copy(file, dst_filename);
+	return receive_file(socket, dst_filename, sizeFile);
 }
 
-int retrieve_file(char * hash, char * filename) {
+int retrieve_file(char * hash, int socket,int sizeFile) {
 	char src_filename[PATH_MAX];
 	snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return copy(src_filename, filename);
+	return send_file(socket, src_filename, sizeFile);
 }
 

@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <fcntl.h>
 
 #define BUFFER_SIZE 256 /* Default buffer size */
 #define COMMENT_SIZE 80 /** < Longitud del comentario */
@@ -61,16 +62,20 @@ typedef enum {
 /**
  * @brief Start the protocol for send a file
  * @param socket socket to send the file
+ * @param pathFile path of file to send
+ * @param sizeFile size of the file to send
  * @return 0 en caso de exito, -1 en caso de fallido
  */
-int send_file(int socket);
+int send_file(int socket, char * pathFile, int sizeFile);
 
 /**
  * @brief Start the protocol for recive a file
  * @param socket socket to recieve a file
+ * @param pathFile path of file to been resived
+ * @param sizeFile size of the file to recieve
  * @return 0 en caso de exito, -1 en caso de fallido
  */
-int receive_file(int socket, char **filedata, struct file_request *information);
+int receive_file(int socket, char *pathFile, int sizeFile);
 
 
 /**
