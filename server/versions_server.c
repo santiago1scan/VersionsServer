@@ -114,59 +114,54 @@ return_code add(int socket, int idCliente) {
 	size_t size_info = sizeof(struct file_request);
 	struct file_request *info_file = malloc(size_info);
 
-	size_t bytes_read = read(socket, info_file, size_info);
-	
-	//Validamos que el estado sea correcto
-	return_code_protocol state= validateRead( bytes_read);
-	if( state != ALL_OK)
-		return state;
+	size_t bytes_read = receive_file_request(socket, info_file);
+
+	if(bytes_read != OK)
+		return VERSION_ERROR;
+
 	//Crea la nueva version en memoria
-	create_version(info_file->pathFile, info_file->hashFile, idCliente,&v);
+	create_version(info_file->nameFile, info_file->hashFile, idCliente,&v);
 	
 	//2.Validar si existe, y dar respuesta
 
-	size_t existVersion = version_exists(info_file->pathFile, idCliente,v.hash);
+	size_t existVersion = version_exists(info_file->nameFile, idCliente,v.hash);
 
-	//Respondemos si existe el usuario
-	state =validateWrite(write(socket, (void *)existVersion, sizeof(int))); 
-	if( state != ALL_OK)
-		return state;
+	//2.1 Notificamos al usuario
 
-	//Si existe acabamos la ejecucion
-	if(existVersion == 1)
-		return VERSION_ALREADY_EXISTS;
+	return_code response_user = existVersion ?VERSION_ALREADY_EXISTS:VERSION_NOT_EXISTS;
+
+	if(send_status_code(socket, response_user) != OK)
+		return VERSION_ERROR;
 	
-	//3.Resibir lel tamanio del archivo con el comentario
+	//3.Resibir el tamanio del archivo con el comentario
 	size_t size_file_transfer = sizeof(struct file_transfer);
 	struct file_transfer *info_file_transfer = malloc(size_file_transfer);
 
-	bytes_read = read(socket, info_file_transfer, size_file_transfer);
-
-	state = validateRead(bytes_read);
-	if(state != ALL_OK)
-		state;
+	if( receive_file_transfer(socket, info_file_transfer) != OK )
+		return VERSION_ERROR;
 
 	//4.Resibir el archivo 
 	
 	strncpy(v.comment, info_file_transfer->comment, sizeof(v.comment) - 1);
 	v.comment[sizeof(v.comment) - 1] = '\0';
 
+
 	//Almacena el archivo en el repositorio.
-	if( store_file(info_file->pathFile, v.hash, socket, info_file_transfer->filseSize) != 1){
-		validateRead(write(socket, VERSION_ERROR, sizeof(return_code_protocol)));
-		
+	if( store_file(info_file->nameFile, v.hash, socket, info_file_transfer->filseSize) != 1){	
+		send_status_code(socket, VERSION_ERROR);
 		return VERSION_ERROR;
 	}
 	//Agrega un nuevo registro al archivo versions.db
 	if(add_new_version(&v) != 1){
-		validateRead(write(socket, VERSION_ERROR, sizeof(return_code_protocol)));
+		send_status_code(socket, VERSION_ERROR);
 		return VERSION_ERROR;
 	}
 
 	//5.Responder el estado de si se guardon
 	// Si la operacion es exitosa, retorna VERSION_ADDED
-	return_code_protocol response = ALL_OK; // Asegúrate de que ALL_OK esté correctamente inicializado
-    validateRead(write(socket, &response, sizeof(return_code_protocol)));
+	return_code response = VERSION_ADDED; // Asegúrate de que ALL_OK esté correctamente inicializado
+	send_status_code(socket, response);
+	
 	return VERSION_ADDED;
 }
 
@@ -190,14 +185,13 @@ int add_new_version(file_version * v) {
 
 void list(int socket, int idCliente) {
 	//1. Resibimos la informacion del archivo
-	char filename[PATH_MAX];
+	
+	struct file_request *file = malloc(sizeof(struct file_request));
 
-	size_t bytes_read = read(socket, filename, PATH_MAX);
-
-	return_code_protocol state = validateRead(bytes_read);
-
-	if(state != ALL_OK)
+	if( send_file_request(socket, file) != OK)
 		return;
+
+	char filename[PATH_MAX] = file->nameFile;
 	
 	//Abre el la base de datos de versiones (versions.db)
 	FILE * fp = fopen(".versions/versions.db", "r");
@@ -319,7 +313,7 @@ int version_exists(char * filename, int idClient,char * hash) {
 	return 0;
 }
 
-int get(int socket, int idCliente) {
+return_code get(int socket, int idCliente) {
 	//1.Resibir la informacion de nombre y version 
 	size_t size_info = sizeof(struct file_request);
 	struct file_request *info_file = malloc(size_info);
@@ -335,7 +329,7 @@ int get(int socket, int idCliente) {
 
 	//2. Respondemos con al longitud del archivo
 	char filename[PATH_MAX];
-	strncpy(filename, info_file->pathFile, PATH_MAX - 1);
+	strncpy(filename, info_file->nameFile, PATH_MAX - 1);
 	filename[PATH_MAX - 1] = '\0'; // Asegúrate de que la cadena esté terminada en nulo
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente

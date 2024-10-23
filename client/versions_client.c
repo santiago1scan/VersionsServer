@@ -113,8 +113,8 @@ return_code add(char * filename, char * comment, int client_socket) {
 
 	file_version v;
 	struct file_request *versionsSend = malloc(sizeof(struct file_request));
-	strncpy(versionsSend-> pathFile, filename, sizeof(versionsSend->pathFile) - 1);
-    versionsSend->pathFile[sizeof(versionsSend->pathFile) - 1] = '\0'; 
+	strncpy(versionsSend-> nameFile, filename, sizeof(versionsSend->nameFile) - 1);
+    versionsSend->nameFile[sizeof(versionsSend->nameFile) - 1] = '\0'; 
 
 	// 1. Crea la nueva version en memoria
 

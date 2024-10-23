@@ -31,6 +31,22 @@ void usage();
 void handle_terminate(int sig);
 
 /**
+*@brief do the action to add 
+
+ */
+ status_operation_socket actionAdd();
+ /**
+*@brief do the action to add 
+
+ */
+ status_operation_socket actionGet();
+ /**
+*@brief do the action to add 
+
+ */
+ status_operation_socket actionList();
+
+/**
  * @brief setup the id client in a file or generate a new one
  * @return int id of the client
  */
@@ -124,9 +140,12 @@ int main(int argc, char *argv[]) {
 			struct first_request *peticion = malloc(sizeof(struct first_request));
 			peticion->request = peticionRequest;
 			peticion->idUser = idClient;
-			if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
-				printf("Falla escritura");
+			status_operation_socket restult_first_request = send_first_request(client_socket, peticionRequest);
+			if(restult_first_request != OK){
+				printf("Error");
 			}
+			
+			
 			free(peticion);
 			
 			//get(argument2, argument3);
@@ -139,6 +158,30 @@ int main(int argc, char *argv[]) {
 
 }
 
+int actionAdd(){
+	return 0;
+}
+
+status_operation_socket actionGet(){
+	peticionRequest = GET;
+	struct first_request *peticion = malloc(sizeof(struct first_request));
+	peticion->request = peticionRequest;
+	peticion->idUser = idClient;
+	status_operation_socket restult_first_request = send_first_request(client_socket, peticionRequest);
+	if(restult_first_request != OK){
+		printf("Error");
+		return ERROR;
+	}
+	if(get(argument2, argument3)) == 0{
+		printf("Error in get");
+		return ERROR;
+	}	
+	return restult_first_request;
+}
+
+int actionList(){
+	return 0;
+}
 void usage() {
 	printf("Uso: rversions IP PORT Conecta el cliente a un servidor en la IP y puerto especificados.\n");
 	printf("Los comandos, una vez que el cliente se ha conectado al servidor, son los siguientes:\n");

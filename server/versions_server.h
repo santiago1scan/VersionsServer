@@ -75,6 +75,6 @@ void list(int socket, int idCliente);
  * @param idCliente id del cliente
  * @return 1 en caso de exito, 0 si ocurre un error.
  */
-int get(int socket, int idCLiente);
+return_code get(int socket, int idCLiente);
 
 #endif

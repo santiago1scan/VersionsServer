@@ -207,18 +207,20 @@ void *handler_user_thread(void *args){
 	size_t size_struct = sizeof(struct first_request); 
 	struct first_request *request = malloc(size_struct);
 
-	while (1)
-	{
-		//Leemos la estructura de la priemra peticion
-		size_t bytes_read = read(clientSocket, request, size_struct);
-		printf("Mensaje del cliente %d resbidio\n", request->idUser);
-		
-		if( bytes_read == -1)
-            break;
-        else if( bytes_read ==0){
-            printf("Un cliente se ha desconectado\n\n");
-            break;
-        }
+	int bucle = 1;
+	while (bucle)
+	{	
+		switch (receive_first_request(clientSocket, request))
+		{
+		case ERROR_SOCKET:
+			bucle = 0;
+			break;
+		case CLIENT_DISCONECT:
+			bucle = 0;
+			break;
+		}
+		if(bucle== 0)
+			break;
 
 		switch (request->request)
 		{
