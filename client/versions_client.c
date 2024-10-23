@@ -9,6 +9,7 @@
 
 #include "versions_client.h"
 
+
 /**
  * @brief Crea una version en memoria del archivo
  * Valida si el archivo especificado existe y crea su hash
@@ -108,23 +109,45 @@ return_code create_version(char * filename, char * comment, file_version * resul
 
 }
 
-return_code add(char * filename, char * comment) {
+return_code add(char * filename, char * comment, int client_socket) {
 
 	file_version v;
+	struct file_request *versionsSend = malloc(sizeof(struct file_request));
+	strncpy(versionsSend-> pathFile, filename, sizeof(versionsSend->pathFile) - 1);
+    versionsSend->pathFile[sizeof(versionsSend->pathFile) - 1] = '\0'; 
 
 	// 1. Crea la nueva version en memoria
 
 	create_version(filename, comment, &v);
-	// 2. Verifica si ya existe una version con el mismo hash
-	if(version_exists(filename, v.hash) == 1)
-		return VERSION_ALREADY_EXISTS;
-	// 3. Almacena el archivo en el repositorio.
-	if( store_file(filename, v.hash) != 1)
+	strncpy(versionsSend->hashFile, v.hash, sizeof(versionsSend->hashFile) - 1);
+    versionsSend->hashFile[sizeof(versionsSend->hashFile) - 1] = '\0'; 
+	if(write(client_socket, (void*)versionsSend, sizeof(struct file_request))== -1){
+		printf("Falla escritura");
+	}
+	size_t bitsRide;
+	int versionsExits;
+	bitsRide = read(client_socket,&versionsExits, sizeof(int));
+	if(bitsRide != sizeof(int)){
 		return VERSION_ERROR;
-	// 4. Agrega un nuevo registro al archivo versions.db
-	if(add_new_version(&v) != 1)
-		return VERSION_ERROR;
+	}
+	if(versionsExits == 1){
+		return VERSION_EXISTS;
+	}
 
+	struct file_transfer *sendVersionsTransfer = malloc(sizeof(struct file_transfer ));
+	strncpy(sendVersionsTransfer->comment, comment, sizeof(sendVersionsTransfer->comment) - 1);
+    sendVersionsTransfer->comment[sizeof(sendVersionsTransfer->comment) - 1] = '\0'; 
+	//Tengo que validar en todo lado el di cliente
+	// Obtiene la longitud del archivo
+	struct stat st;
+	if(stat(filename, &st) != 0){
+		return VERSION_ERROR;
+	}
+	off_t file_size = st.st_size;
+	sendVersionsTransfer->filseSize = file_size;
+	if(write(client_socket, (void*)sendVersionsTransfer, sizeof(struct file_transfer))== -1){
+		printf("Falla escritura");
+	}
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return VERSION_ADDED;
 }

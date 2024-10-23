@@ -57,10 +57,10 @@ typedef enum {
  *
  * @param filename Nombre del archivo a adicionar
  * @param comment Comentario de la version actual
- *
+ * @param socket socket to write 
  * @return Codigo de la operacion
  */
-return_code add(char * filename, char * comment);
+return_code add(char * filename, char * comment, int socket);
 
 /**
  * @brief Lista las versiones de un archivo.

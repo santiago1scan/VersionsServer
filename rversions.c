@@ -96,29 +96,44 @@ int main(int argc, char *argv[]) {
 		scanf("%s %s %s", order, argument2, argument3);
 		if(EQUALS(order, "add")){
 			peticionRequest = ADD;
-
-			//add(argument2, argument3);
+			struct first_request *peticion = malloc(sizeof(struct first_request));
+			peticion->request = peticionRequest;
+			peticion->idUser = idClient;
+			if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
+				printf("Falla escritura");
+			}
+			free(peticion);
+				//add(argument2, argument3);
 			
 			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "list")){
 			peticionRequest = LIST;
+			struct first_request *peticion = malloc(sizeof(struct first_request));
+			peticion->request = peticionRequest;
+			peticion->idUser = idClient;
+			if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
+				printf("Falla escritura");
+			}
+			free(peticion);
 			//list(argument2);
 			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "get")){
 			peticionRequest = GET;
+			struct first_request *peticion = malloc(sizeof(struct first_request));
+			peticion->request = peticionRequest;
+			peticion->idUser = idClient;
+			if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
+				printf("Falla escritura");
+			}
+			free(peticion);
+			
 			//get(argument2, argument3);
 			printf("El CLietnte solicita add\n");
 		}
 		
-		struct first_request *peticion = malloc(sizeof(struct first_request));
-		peticion->request = peticionRequest;
-		peticion->idUser = idClient;
-		if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
-			printf("Falla escritura");
-		}
-		free(peticion);
+		
 	}
 	exit(EXIT_SUCCESS);
 
