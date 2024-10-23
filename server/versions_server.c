@@ -222,7 +222,7 @@ void list(int socket, int idCliente) {
 			snprintf(message, size_message, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
 			cont = cont + 1;
 		
-		}else if(strcmp(r.filename,filename)==0){
+		}else if(EQUALS(r.filename,filename) && r.idCliente == idCliente){
 			snprintf(message, size_message, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
 			cont = cont + 1;
 		}
@@ -345,22 +345,6 @@ int get(int socket, int idCliente) {
 	if( fp == NULL)
 		return 0;
 	
-	//ESTA RE MAL ESTOOOOOO
-	//Tengo que validar en todo lado el di cliente
-	// Obtiene la longitud del archivo
-	struct stat st;
-	if (stat(filename, &st) != 0) {
-		fclose(fp);
-		return VERSION_ERROR;
-	}
-	off_t file_size = st.st_size;
-
-	// Envia la longitud del archivo al cliente
-	state = validateWrite(write(socket, &file_size, sizeof(off_t)));
-	if (state != ALL_OK) {
-		fclose(fp);
-		return state;
-	}
 
 	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
 	int cont = 1;
@@ -368,11 +352,24 @@ int get(int socket, int idCliente) {
 		if(fread(&r, sizeof(file_version), 1, fp) != 1)
 			break;
 		//Si el registro corresponde al archivo buscado, lo restauramos
-		if(strcmp(r.filename,filename)==0){
-			if(cont == version){
-				if(!retrieve_file(r.hash, socket,file_size));
-					return 1;
+		if(EQUALS(r.filename,filename) && r.idCliente == idCliente){
+			if(cont != version){
+				cont++;
+				continue;
 			}
+
+			struct stat st;
+			if (stat(r.filename, &st) != 0) {
+				return VERSION_ERROR;
+			}
+			off_t file_size = st.st_size;
+			
+			state = validateWrite(write(socket, &file_size, sizeof(off_t)));
+			if(state != ALL_OK)
+				return state;
+
+			if(!retrieve_file(r.hash, r.filename, file_size));
+				return 1;
 			cont++;		
 		}
 	}

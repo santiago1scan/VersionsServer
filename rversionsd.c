@@ -47,6 +47,11 @@ void loop_listening();
  */
 void *handler_user_thread(void *args);
 
+/**
+ * @brief delete the user with the socket given
+ * @param socket socket of the user to delete
+ */
+void delete_user(int socket);
 
 /**
  * @brief Structure to save the actives users
@@ -233,6 +238,16 @@ void *handler_user_thread(void *args){
 
 	}
 	close(clientSocket);
+	delete_user(clientSocket);
 	free(request);
 }
 
+void delete_user(int socket){
+	pthread_mutex_lock(&mutexServer);
+	size_t i = 0;
+	while(myServer->socketsUsers[i] != socket)
+		i++;
+	myServer->socketsUsers[i] = -1;
+	myServer->countUsers--;
+	pthread_mutex_unlock(&mutexServer);
+}
