@@ -186,7 +186,7 @@ void loop_listening(){
 		//Agregamos de manera segura el socket del nuevo usuario a nuestra estructura
 		pthread_mutex_lock(&mutexServer);
 		size_t i = 0;
-		while ( myServer->socketsUsers[i]>=0)
+		while ( myServer->socketsUsers[i]>0)
 			i++;
 		myServer->socketsUsers[i] = new_client_socket;
 		myServer->countUsers++;
@@ -206,6 +206,7 @@ void *handler_user_thread(void *args){
 	{
 		//Leemos la estructura de la priemra peticion
 		size_t bytes_read = read(clientSocket, request, size_struct);
+		printf("Mensaje del cliente %d resbidio\n", request->idUser);
 		
 		if( bytes_read == -1)
             break;
@@ -217,18 +218,20 @@ void *handler_user_thread(void *args){
 		switch (request->request)
 		{
 		case ADD:
-			add(clientSocket);
+			printf("El usuario %d ha solicitado un add\n", clientSocket);
+			//add(clientSocket);
 			break;
 		case LIST:
-			list(clientSocket);
+			printf("El usuario %d ha solicitado un list\n", clientSocket);
+			//list(clientSocket);
 			break;
 		case GET:
-			get(clientSocket);
+			printf("El usuario %d ha solicitado un get\n", clientSocket);
+			//get(clientSocket);
 			break;
 		}
 
 	}
-	
 	close(clientSocket);
 	free(request);
 }

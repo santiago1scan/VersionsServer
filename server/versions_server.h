@@ -38,6 +38,7 @@ typedef  struct __attribute__((aligned(512))) {
 	char filename[PATH_MAX]; /**< Nombre del archivo original. */
 	char hash[HASH_SIZE];           /**< Hash del contenido del archivo. */
 	char comment[COMMENT_SIZE];	   /**< Comentario del usuario. */
+	int idCliente; /**< id del cliente que subio la version */
 }file_version;
 
 /**
@@ -55,22 +56,25 @@ typedef enum {
 /**
  * @brief Adiciona un archivo al repositorio.
  * @param socket socket ha comunicar
+ * @param idCliente id del cliente
  * @return Codigo de la operacion
  */
-return_code add(int socket);
+return_code add(int socket, int idCliente);
 
 /**
  * @brief Lista las versiones de un archivo.
  * @param socket socket ha comunicar
+ * @param idCliente id del cliente
  */
-void list(int socket);
+void list(int socket, int idCliente);
 
 /**
  * @brief Obtiene una version del un archivo.
  * Sobreescribe la version existente.
  * @param socket socket ha comunicar
+ * @param idCliente id del cliente
  * @return 1 en caso de exito, 0 si ocurre un error.
  */
-int get();
+int get(int socket, int idCLiente);
 
 #endif

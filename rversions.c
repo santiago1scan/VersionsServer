@@ -30,6 +30,12 @@ void usage();
  */
 void handle_terminate(int sig);
 
+/**
+ * @brief setup the id client in a file or generate a new one
+ * @return int id of the client
+ */
+int setup_idClient();
+
 int client_socket; /* socket of the conexion with the server */
 
 int main(int argc, char *argv[]) {
@@ -80,9 +86,11 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 	
-	system("clear");
+	//system("clear");
     printf("Conectado al servidor %s en el puerto %d\n", server_ip, server_port);
 
+	//Cargamos o generamos el id del cliente
+	int idClient = setup_idClient();
 	while(1){
 		type_request peticionRequest;
 		scanf("%s %s %s", order, argument2, argument3);
@@ -91,22 +99,26 @@ int main(int argc, char *argv[]) {
 
 			//add(argument2, argument3);
 			
-			printf("El CLietnte solicita add");
+			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "list")){
 			peticionRequest = LIST;
 			//list(argument2);
-			printf("El CLietnte solicita add");
+			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "get")){
 			peticionRequest = GET;
 			//get(argument2, argument3);
-			printf("El CLietnte solicita add");
+			printf("El CLietnte solicita add\n");
 		}
-
-		if(write(client_socket, (void*)peticionRequest, sizeof(int))== -1){
+		
+		struct first_request *peticion = malloc(sizeof(struct first_request));
+		peticion->request = peticionRequest;
+		peticion->idUser = idClient;
+		if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
 			printf("Falla escritura");
 		}
+		free(peticion);
 	}
 	exit(EXIT_SUCCESS);
 
@@ -125,4 +137,44 @@ void handle_terminate(int sig){
 	printf("Ending the client process...\n");
 	close(client_socket);
 	exit(EXIT_SUCCESS);
+}
+
+int setup_idClient() {
+    char *filename = "idClient";
+
+    // Verificar si el archivo no existe
+    if (access(filename, F_OK) == -1) {
+		printf("No existe el archivo\n");
+        // Inicializar la semilla del generador de números aleatorios
+        srand(time(NULL));
+        int random_number = rand()%1000000 + 1;
+
+        // Crear y abrir el archivo en modo de escritura
+        FILE *file = fopen(filename, "w");
+        if (file == NULL) {
+            perror("Error al crear el archivo");
+            exit(EXIT_FAILURE);
+        }
+
+        // Escribir el número aleatorio en el archivo
+        fprintf(file, "%d\n", random_number);
+
+        // Cerrar el archivo
+        fclose(file);
+		return random_number;
+    } else {
+        // El archivo ya existe, abrirlo en modo de lectura
+        FILE *file = fopen(filename, "r");
+        if (file == NULL) {
+            perror("Error al abrir el archivo");
+            exit(EXIT_FAILURE);
+        }
+
+        // Leer el número del archivo
+        int id;
+        fscanf(file, "%d", &id);
+        fclose(file);
+
+        return id;
+    }
 }

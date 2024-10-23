@@ -13,22 +13,23 @@
  * @brief Crea una version en memoria del archivo
  * Valida si el archivo especificado existe y crea su hash
  * @param filename Nombre del archivo
- * @param hash hash of the file
+ * @param hash hash of the file\
+ * @param idClient id del cliente
  * @param result Nueva version en memoria
  *
  * @return Resultado de la operacion
  */
-return_code create_version(char * filename, char * hash, file_version * result);
+return_code create_version(char * filename, char * hash, int idClient ,file_version * result);
 
 /**
  * @brief Verifica si existe una version para un archivo
  *
  * @param filename Nombre del archivo
  * @param hash Hash del contenido
- *
+ * @param clientId id del cliente
  * @return 1 si la version existe, 0 en caso contrario.
  */
-int version_exists(char * filename, char * hash);
+int version_exists(char * filename, int clientId,char * hash);
 
 /**
  * @brief Obtiene el hash de un archivo.
@@ -83,7 +84,7 @@ int retrieve_file(char * hash, int socket ,int sizeFile);
 int add_new_version(file_version * v);
 
 
-return_code create_version(char * filename, char * hash, file_version * result) {
+return_code create_version(char * filename, char * hash, int idClient,file_version * result) {
 	file_version v;
 	struct stat statbuff;
 	// Verifica si el archivo existe y es regular
@@ -100,11 +101,13 @@ return_code create_version(char * filename, char * hash, file_version * result) 
 	strncpy(result->hash, hash, sizeof(result->hash) - 1);
 	result->hash[sizeof(result->hash) - 1] = '\0';
 
+	result->idCliente = idClient;
+
 	return VERSION_CREATED;
 
 }
 
-return_code add(int socket) {
+return_code add(int socket, int idCliente) {
 	file_version v;
 
 	//1.Resibir la informacion de nombre y hash 
@@ -118,11 +121,11 @@ return_code add(int socket) {
 	if( state != ALL_OK)
 		return state;
 	//Crea la nueva version en memoria
-	create_version(info_file->pathFile, info_file->hashFile, &v);
+	create_version(info_file->pathFile, info_file->hashFile, idCliente,&v);
 	
 	//2.Validar si existe, y dar respuesta
 
-	size_t existVersion = version_exists(info_file->pathFile, v.hash);
+	size_t existVersion = version_exists(info_file->pathFile, idCliente,v.hash);
 
 	//Respondemos si existe el usuario
 	state =validateWrite(write(socket, (void *)existVersion, sizeof(int))); 
@@ -144,13 +147,6 @@ return_code add(int socket) {
 		state;
 
 	//4.Resibir el archivo 
-
-	char file[info_file_transfer->filseSize];
-	bytes_read = read(socket, file, info_file_transfer->filseSize);
-
-	state = validateRead(bytes_read);
-	if(state!= ALL_OK)
-		return state;
 	
 	strncpy(v.comment, info_file_transfer->comment, sizeof(v.comment) - 1);
 	v.comment[sizeof(v.comment) - 1] = '\0';
@@ -169,7 +165,7 @@ return_code add(int socket) {
 
 	//5.Responder el estado de si se guardon
 	// Si la operacion es exitosa, retorna VERSION_ADDED
-	    return_code_protocol response = ALL_OK; // Asegúrate de que ALL_OK esté correctamente inicializado
+	return_code_protocol response = ALL_OK; // Asegúrate de que ALL_OK esté correctamente inicializado
     validateRead(write(socket, &response, sizeof(return_code_protocol)));
 	return VERSION_ADDED;
 }
@@ -192,7 +188,7 @@ int add_new_version(file_version * v) {
 	return 1;
 }
 
-void list(int socket) {
+void list(int socket, int idCliente) {
 	//1. Resibimos la informacion del archivo
 	char filename[PATH_MAX];
 
@@ -289,7 +285,7 @@ int copy(char * source, char * destination) {
     return 1;
 }
 
-int version_exists(char * filename, char * hash) {
+int version_exists(char * filename, int idClient,char * hash) {
 	//abre la base de datos de versiones .versions/versions.db
 	FILE * fp = fopen(".versions/versions.db", "rb");
 
@@ -317,13 +313,13 @@ int version_exists(char * filename, char * hash) {
 	fread(versions, sizeof(file_version), countVersions, fp);
 	fclose(fp);
 	for(int i = 0; i < countVersions; i++)
-		if(strcmp(versions[i].filename, filename) == 0 && strcmp(versions[i].hash, hash) == 0)
+		if(strcmp(versions[i].filename, filename) == 0 && strcmp(versions[i].hash, hash) == 0 && versions[i].idCliente == idClient)
 			return 1;
 	// Verifica si en la bd existe un registro que coincide con filename y hash
 	return 0;
 }
 
-int get(int socket) {
+int get(int socket, int idCliente) {
 	//1.Resibir la informacion de nombre y version 
 	size_t size_info = sizeof(struct file_request);
 	struct file_request *info_file = malloc(size_info);
@@ -348,7 +344,9 @@ int get(int socket) {
 
 	if( fp == NULL)
 		return 0;
-
+	
+	//ESTA RE MAL ESTOOOOOO
+	//Tengo que validar en todo lado el di cliente
 	// Obtiene la longitud del archivo
 	struct stat st;
 	if (stat(filename, &st) != 0) {

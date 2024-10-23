@@ -31,7 +31,7 @@ typedef enum {
  */
 struct first_request{
     type_request request; /*!< Request to make*/
-    int sizeNextMessage; /*!< size of the next message of user (optional)*/
+    int idUser; /*!< id of the user*/
 };
 
 /**
