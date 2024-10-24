@@ -43,6 +43,7 @@ status_operation_socket send_file(int socket, char *pathFile, int sizeFile) {
 
 status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
     // 1. Open the file
+    printf("Se intenta incializar el archivo\n");
     int file = open(pathFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file < 0) {
         perror("Error opening file");
@@ -56,7 +57,9 @@ status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
     char buffer[BUFFER_SIZE];
     ssize_t bytesReceived;
     off_t totalBytesReceived = 0;
+    printf("Se iniciar el bucle para resibir\n");
     while (totalBytesReceived < fileSize && (bytesReceived = read(socket, buffer, sizeof(buffer))) > 0) {
+        printf("Se ha recibido %d\n", totalBytesReceived);
         if (write(file, buffer, bytesReceived) < 0) {
             perror("Error writing to file");
             close(file);
@@ -65,6 +68,7 @@ status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
         totalBytesReceived += bytesReceived;
     }
 
+    printf("Se ha termiando el while\n");
     if (bytesReceived < 0) {
         perror("Error reading from socket");
         close(file);
@@ -113,24 +117,28 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
 }
 
 status_operation_socket send_file_request(int socket, struct file_request *file_request_param){
+    printf("send_file_request(%s,%s,%d)\n", file_request_param->nameFile, file_request_param->hashFile, file_request_param->version );
     size_t size_struct = sizeof(struct file_request);
     int bytes_writen = write(socket, (void *) file_request_param, size_struct);
     return validate_message(bytes_writen, size_struct);
 }
 
 status_operation_socket send_file_transfer(int socket, struct file_transfer *file_transfer_param ){
+    printf("send_file_transfer(%d, %s) \n", file_transfer_param->filseSize,file_transfer_param->comment);
     size_t size_struct = sizeof(struct file_transfer);
     int bytes_writen = write(socket, (void *) file_transfer_param, size_struct);
     return validate_message(bytes_writen, size_struct);
 }
 
 status_operation_socket send_status_code(int socket, return_code code){
+    printf("send_status_code(%d)\n", code);
     size_t size_struct = sizeof(return_code);
     int bytes_writen = write(socket, (void *) &code, size_struct);
     return validate_message(bytes_writen, size_struct);
 }
 
 status_operation_socket send_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]){
+    printf("send_element_list(%s)\n", elementList);
     size_t size_struct = SIZE_ELEMENT_LIST;
     int bytes_writen = write(socket, (void *) elementList, size_struct);
     return validate_message(bytes_writen, size_struct);

@@ -94,7 +94,6 @@ return_code add(int socket, int idCliente) {
 	//1.Resibir la informacion de nombre y hash 
 	size_t size_info = sizeof(struct file_request);
 	struct file_request info_file;
-
 	size_t bytes_read = receive_file_request(socket, &info_file);
 
 	if(bytes_read != OK)
@@ -116,8 +115,8 @@ return_code add(int socket, int idCliente) {
 	if(existVersion)
 		return VERSION_ALREADY_EXISTS;
 	//3.Resibir el tamanio del archivo con el comentario
-	size_t size_file_transfer = sizeof(struct file_transfer);
 	struct file_transfer info_file_transfer;
+	// printf("Se ha intentado recibir el file_transfer\n");
 
 	if( receive_file_transfer(socket, &info_file_transfer) != OK )
 		return VERSION_ERROR;
@@ -126,7 +125,6 @@ return_code add(int socket, int idCliente) {
 	
 	strncpy(v.comment, info_file_transfer.comment, sizeof(v.comment) - 1);
 	v.comment[sizeof(v.comment) - 1] = '\0';
-
 
 	//Almacena el archivo en el repositorio.
 	if( store_file(info_file.nameFile, v.hash, socket, info_file_transfer.filseSize) != 1){	
@@ -142,6 +140,7 @@ return_code add(int socket, int idCliente) {
 	//5.Responder el estado de si se guardon
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return_code response = VERSION_ADDED; // Asegúrate de que ALL_OK esté correctamente inicializado
+
 	send_status_code(socket, response);
 	
 	return VERSION_ADDED;

@@ -213,25 +213,20 @@ void *handler_user_thread(void *args){
 			break;
 		}
 
-		printf("Cliente con id %d, solicito un %d\n", request->idUser, request->request);
-
 		if (request->request == ADD) {
 			printf("El usuario %d ha solicitado un add\n", request->idUser);
-			add(clientSocket, request->idUser);
-		} 
-		else{
-			printf("Ha pedido algo diferente de un add\n");
+			if(add(clientSocket, request->idUser) != FILE_ADDED){
+				printf("Error al intentar agrega archivo del usario %d\n", request->idUser);
+			}
+		} else if (request->request == LIST) {
+			printf("El usuario %d ha solicitado un list\n", request->idUser);
+			list(clientSocket, request->idUser);
+		} else if (request->request == GET) {
+			printf("El usuario %d ha solicitado un get\n", request->idUser);
+			get(clientSocket, request->idUser);
+		} else {
+			printf("Solicitud desconocida del usuario %d\n", request->idUser);
 		}
-		
-		// else if (request->request == LIST) {
-		// 	printf("El usuario %d ha solicitado un list\n", request->idUser);
-		// 	list(clientSocket, request->idUser);
-		// } else if (request->request == GET) {
-		// 	printf("El usuario %d ha solicitado un get\n", request->idUser);
-		// 	get(clientSocket, request->idUser);
-		// } else {
-		// 	printf("Solicitud desconocida del usuario %d\n", request->idUser);
-		// }
 	}
 
 	close(clientSocket);
