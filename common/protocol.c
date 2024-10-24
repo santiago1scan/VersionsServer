@@ -101,6 +101,12 @@ status_operation_socket receive_status_code(int socket,return_code *status_opera
     return  validate_messagee(bite_read, bite_expected);
 }
 
+status_operation_socket receive_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]){
+    size_t bite_expected  = SIZE_ELEMENT_LIST;
+    size_t bite_read = read(socket, (void*)&elementList, bite_expected);    
+    return  validate_messagee(bite_read, bite_expected);
+}
+
 status_operation_socket send_first_request(int socket, struct first_request *first_request_param){
     size_t size_struct = sizeof(struct first_request);
     int bytes_writen = write(socket, (void *) first_request_param, size_struct);
@@ -122,6 +128,12 @@ status_operation_socket send_file_transfer(int socket, struct file_transfer *fil
 status_operation_socket send_status_code(int socket, return_code code){
     size_t size_struct = sizeof(return_code);
     int bytes_writen = write(socket, (void *) &code, size_struct);
+    return validate_message(bytes_writen, size_struct);
+}
+
+status_operation_socket send_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]){
+    size_t size_struct = SIZE_ELEMENT_LIST;
+    int bytes_writen = write(socket, (void *) elementList, size_struct);
     return validate_message(bytes_writen, size_struct);
 }
 

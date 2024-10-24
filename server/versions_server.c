@@ -112,19 +112,19 @@ return_code add(int socket, int idCliente) {
 
 	//1.Resibir la informacion de nombre y hash 
 	size_t size_info = sizeof(struct file_request);
-	struct file_request *info_file = malloc(size_info);
+	struct file_request info_file;
 
-	size_t bytes_read = receive_file_request(socket, info_file);
+	size_t bytes_read = receive_file_request(socket, &info_file);
 
 	if(bytes_read != OK)
 		return VERSION_ERROR;
 
 	//Crea la nueva version en memoria
-	create_version(info_file->nameFile, info_file->hashFile, idCliente,&v);
+	create_version(info_file.nameFile, info_file.hashFile, idCliente,&v);
 	
 	//2.Validar si existe, y dar respuesta
 
-	size_t existVersion = version_exists(info_file->nameFile, idCliente,v.hash);
+	size_t existVersion = version_exists(info_file.hashFile, idCliente,v.hash);
 
 	//2.1 Notificamos al usuario
 
@@ -135,19 +135,19 @@ return_code add(int socket, int idCliente) {
 	
 	//3.Resibir el tamanio del archivo con el comentario
 	size_t size_file_transfer = sizeof(struct file_transfer);
-	struct file_transfer *info_file_transfer = malloc(size_file_transfer);
+	struct file_transfer info_file_transfer;
 
-	if( receive_file_transfer(socket, info_file_transfer) != OK )
+	if( receive_file_transfer(socket, &info_file_transfer) != OK )
 		return VERSION_ERROR;
 
 	//4.Resibir el archivo 
 	
-	strncpy(v.comment, info_file_transfer->comment, sizeof(v.comment) - 1);
+	strncpy(v.comment, info_file_transfer.comment, sizeof(v.comment) - 1);
 	v.comment[sizeof(v.comment) - 1] = '\0';
 
 
 	//Almacena el archivo en el repositorio.
-	if( store_file(info_file->nameFile, v.hash, socket, info_file_transfer->filseSize) != 1){	
+	if( store_file(info_file.nameFile, v.hash, socket, info_file_transfer.filseSize) != 1){	
 		send_status_code(socket, VERSION_ERROR);
 		return VERSION_ERROR;
 	}
@@ -186,12 +186,12 @@ int add_new_version(file_version * v) {
 void list(int socket, int idCliente) {
 	//1. Resibimos la informacion del archivo
 	
-	struct file_request *file = malloc(sizeof(struct file_request));
+	struct file_request file;
 
-	if( send_file_request(socket, file) != OK)
+	if( send_file_request(socket, &file) != OK)
 		return;
 
-	char filename[PATH_MAX] = file->nameFile;
+	char filename[PATH_MAX] = file.nameFile;
 	
 	//Abre el la base de datos de versiones (versions.db)
 	FILE * fp = fopen(".versions/versions.db", "r");
@@ -202,8 +202,7 @@ void list(int socket, int idCliente) {
 
 	//Leer hasta el fin del archivo 
 	int cont = 1;
-	size_t size_message =sizeof(int) + PATH_MAX + COMMENT_SIZE + HASH_SIZE;
-	char message[size_message];
+	char message[SIZE_ELEMENT_LIST];
 	while(!feof(fp)){
 		
 		//Realizar una lectura y retornar
@@ -213,24 +212,23 @@ void list(int socket, int idCliente) {
 
 		if(strcmp(filename, "") ==0){
 			//Si filename es NULL, muestra todos los registros.
-			snprintf(message, size_message, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
+			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
 			cont = cont + 1;
 		
 		}else if(EQUALS(r.filename,filename) && r.idCliente == idCliente){
-			snprintf(message, size_message, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
+			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
 			cont = cont + 1;
 		}
 
-		state = write(socket, message, size_message);
-		if(state != ALL_OK)
+		if( send_element_list(socket, message) != OK)
 			break;
 		//Si el registro corresponde al archivo buscado, imprimir
 		//Muestra los registros cuyo nombre coincide con filename.
 	}	
 
-	snprintf(message, size_message, " ");
+	snprintf(message, SIZE_ELEMENT_LIST, " ");
 
-	write(socket, message, size_message);
+	send_element_list(socket, message);
 
 	fclose(fp);
 }
@@ -316,21 +314,18 @@ int version_exists(char * filename, int idClient,char * hash) {
 return_code get(int socket, int idCliente) {
 	//1.Resibir la informacion de nombre y version 
 	size_t size_info = sizeof(struct file_request);
-	struct file_request *info_file = malloc(size_info);
+	struct file_request info_file;
 
-	size_t bytes_read = read(socket, info_file, size_info);
+	if( receive_file_request(socket, &info_file) != OK)
+		return VERSION_ERROR;
 	
-	//Validamos que el estado sea correcto
-	return_code_protocol state= validateRead( bytes_read);
-	if( state != ALL_OK)
-		return state;
-	
-	int version = info_file->version;
+	int version = info_file.version;
 
 	//2. Respondemos con al longitud del archivo
 	char filename[PATH_MAX];
-	strncpy(filename, info_file->nameFile, PATH_MAX - 1);
-	filename[PATH_MAX - 1] = '\0'; // Asegúrate de que la cadena esté terminada en nulo
+	strncpy(filename, info_file.nameFile, PATH_MAX - 1);
+	filename[PATH_MAX - 1] = '\0';
+
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente
 	file_version r;
@@ -356,13 +351,14 @@ return_code get(int socket, int idCliente) {
 			if (stat(r.filename, &st) != 0) {
 				return VERSION_ERROR;
 			}
-			off_t file_size = st.st_size;
-			
-			state = validateWrite(write(socket, &file_size, sizeof(off_t)));
-			if(state != ALL_OK)
-				return state;
 
-			if(!retrieve_file(r.hash, r.filename, file_size));
+			struct file_transfer file_transfer;
+			file_transfer.filseSize = st.st_size;
+			
+			if( send_file_transfer(socket, &file_transfer) != OK)
+				return VERSION_ERROR;
+
+			if(!retrieve_file(r.hash, r.filename, st.st_size));
 				return 1;
 			cont++;		
 		}

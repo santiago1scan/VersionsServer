@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
 
 }
 
-int actionAdd(){
+status_operation_socket actionAdd(){
 	return 0;
 }
 
@@ -179,7 +179,7 @@ status_operation_socket actionGet(){
 	return restult_first_request;
 }
 
-int actionList(){
+status_operation_socket actionList(){
 	return 0;
 }
 void usage() {
