@@ -40,7 +40,6 @@ status_operation_socket send_file(int socket, char *pathFile, int sizeFile) {
             }
             totalBytesWritten += bytesWritten;
         }
-        printf("Sent %zd bytes of file\n", totalBytesWritten);
     }
 
     if (bytesRead < 0) {
@@ -56,7 +55,6 @@ status_operation_socket send_file(int socket, char *pathFile, int sizeFile) {
 
 status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
     // 1. Open the file
-    printf("Se intenta inicializar el archivo\n");
     int file = open(pathFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file < 0) {
         perror("Error opening file");
@@ -70,9 +68,7 @@ status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
     char buffer[BUFFER_SIZE];
     ssize_t bytesReceived;
     off_t totalBytesReceived = 0;
-    printf("Se inicia el bucle para recibir\n");
     while (totalBytesReceived < fileSize && (bytesReceived = read(socket, buffer, sizeof(buffer))) > 0) {
-        printf("Se ha recibido %ld bytes\n", totalBytesReceived);
         ssize_t totalBytesWritten = 0;
         while (totalBytesWritten < bytesReceived) {
             ssize_t bytesWritten = write(file, buffer + totalBytesWritten, bytesReceived - totalBytesWritten);
@@ -85,8 +81,6 @@ status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
         }
         totalBytesReceived += bytesReceived;
     }
-
-    printf("Se ha terminado el while\n");
     if (bytesReceived < 0) {
         perror("Error reading from socket");
         close(file);
@@ -134,10 +128,9 @@ status_operation_socket receive_file_transfer(int socket, struct file_transfer *
 
 status_operation_socket receive_status_code(int socket, return_code *status_operation) {
     size_t bytes_expected = sizeof(return_code);
-    int number = *status_operation/1;
     ssize_t bytes_read = read(socket, (void*)status_operation, bytes_expected);    
     printf("-----------RECEIVE STATUS OPERATION------------- \n");
-    printf("status Operation:  %d \n", status_operation);
+    printf("status Operation:  %d \n", *status_operation);
     printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
 }
@@ -206,7 +199,7 @@ status_operation_socket send_status_code(int socket, return_code code) {
     size_t size_struct = sizeof(return_code);
     ssize_t totalBytesWritten = 0;
     while (totalBytesWritten < size_struct) {
-        ssize_t bytes_written = write(socket, (char *)&code + totalBytesWritten, size_struct - totalBytesWritten);
+        ssize_t bytes_written = write(socket, (void *)&code, size_struct);
         if (bytes_written < 0) {
             return ERROR_SOCKET;
         }

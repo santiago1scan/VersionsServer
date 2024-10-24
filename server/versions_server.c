@@ -147,7 +147,6 @@ return_code add(int socket, int idCliente) {
 }
 
 int add_new_version(file_version * v) {
-	printf("Ha entrado a la funcion add_new_version\n");
 	// Abre el archivo versions.db en modo append 
 	//y verificamos que se haya abierto correctamente
 	FILE * fp;
@@ -157,7 +156,6 @@ int add_new_version(file_version * v) {
 		return 0;
 	// Escribe la estructura v en el archivo, verifica que se haya escrito correctamente
 	// y cierra el archivo 
-	printf("Intenta agregar el elemento al archivo\n");
 	if( fwrite(v, sizeof(file_version), 1, fp) != 1){
 		fclose(fp);
 		return 0;
