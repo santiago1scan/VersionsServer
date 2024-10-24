@@ -139,6 +139,8 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
 status_operation_socket send_file_request(int socket, struct file_request *file_request_param){
     printf("send_file_request(%s,%s,%d)\n", file_request_param->nameFile, file_request_param->hashFile, file_request_param->version );
     size_t size_struct = sizeof(struct file_request);
+    file_request_param->sizeHashFile = strlen(file_request_param->hashFile);
+    file_request_param->sizeNameFile = strlen(file_request_param->nameFile);
     int bytes_writen = write(socket, (void *) file_request_param, size_struct);
     return validate_message(bytes_writen, size_struct);
 }
