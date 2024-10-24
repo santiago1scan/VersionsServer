@@ -120,20 +120,20 @@ int main(int argc, char *argv[]) {
 					handle_terminate(0);
 				}
 					
-				printf("Error actionAdd");
+				printf("Error actionAdd rversions\n");
 				continue;
 			}
 			
 		}
 		if(EQUALS(order, "list")){
 			if(actionList(argument2, idClient, client_socket) != OK){
-				printf("Error actionLInsr");
+				printf("Error actionLInsr rversions\n");
 				continue;
 			}
 		}
 		if(EQUALS(order, "get")){
 			if(actionGet(argument2, argument3, idClient, client_socket) != OK){
-				printf("Error in actionGet");
+				printf("Error in actionGet rversions\n");
 				continue;
 			}
 		}
@@ -153,11 +153,11 @@ status_operation_socket actionAdd(char * argument2, char * argument3, int idClie
 	peticion.idUser = idClient;
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
-		printf("Error \n");
+		printf("Error General  rversions\n");
 		return ERROR;
 	}
 	if(add(argument2, argument3, client_socket)!= FILE_ADDED){
-		printf("Error in get \n");
+		printf("Error in add rversions\n");
 		return ERROR;
 	}	
 	return OK;
