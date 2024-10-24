@@ -33,5 +33,5 @@ y un programa cliente llamado rversions.
 ## 1.2. Uso del servidor rversionsd
     $ ./rversionsd
     Uso: rversionsd PORT Escucha por conexiones del cliente en el puerto especificado.
-#2. Protocolo implementado para comunicacion sockets.
+# 2. Protocolo implementado para comunicacion sockets.
 [![sockets protocol](https://i.imgur.com/bX3jyxi.png "sockets protocol")](http://https://i.imgur.com/bX3jyxi.png "sockets protocol")
