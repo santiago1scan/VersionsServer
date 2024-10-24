@@ -84,9 +84,9 @@ status_operation_socket receive_first_request(int socket, struct first_request *
 	size_t bite_expected  = sizeof(struct first_request);
     size_t bite_read = read(socket, (void*)first_request_param, bite_expected);
 
-	printf("-----------FIRST REQUEST------------- \n");
-	printf("file_idUser:  %i \n", first_request_param->idUser);
-	printf("file_hasfile:  %i \n", first_request_param->request);
+	printf("----------- RECEIVE FIRST REQUEST------------- \n");
+	printf("file_idUser:  %d\n", first_request_param->idUser);
+	printf("file_request:  %d \n", first_request_param->request);
 
 
     return validate_message(bite_read, bite_expected);
@@ -96,11 +96,11 @@ status_operation_socket receive_first_request(int socket, struct first_request *
 status_operation_socket receive_file_request(int socket, struct file_request *file_request_param){
     size_t bite_expected  = sizeof(struct first_request);
     size_t bite_read = read(socket, (void*)file_request_param, bite_expected);    
-    printf("-----------FILE REQUEST------------- \n");
+    printf("-----------RECEIVE FILE REQUEST------------- \n");
 	printf("file_hashfile:  %s \n", file_request_param->hashFile);
-	printf("file_hasfile:  %i \n", file_request_param->nameFile);
-    printf("file_sizeHashFile:  %i \n", file_request_param->sizeHashFile);
-    printf("file_sizeNamefile:  %i \n", file_request_param->sizeNameFile);
+	printf("file_nameFile:  %s \n", file_request_param->nameFile);
+    printf("file_sizeHashFile:  %d \n", file_request_param->sizeHashFile);
+    printf("file_sizeNamefile:  %d \n", file_request_param->sizeNameFile);
     return  validate_message(bite_read, bite_expected);
 }
 
@@ -109,7 +109,7 @@ status_operation_socket receive_file_transfer(int socket, struct file_transfer *
     size_t bite_read = read(socket, (void*)file_transfer_param, bite_expected);   
     printf("-----------RECECIVE FILE TRANSFER------------- \n");
     printf("file_comment:  %s \n", file_transfer_param->comment);
-    printf("file_fileSize:  %s \n", file_transfer_param->filseSize);
+    printf("file_fileSize:  %d \n", file_transfer_param->filseSize);
     return  validate_message(bite_read, bite_expected);
 }
 
@@ -117,7 +117,7 @@ status_operation_socket receive_status_code(int socket,return_code *status_opera
     size_t bite_expected  = sizeof(return_code);
     size_t bite_read = read(socket, (void*)status_operation, bite_expected);    
     printf("-----------RECEIVE STATUS OPERATION------------- \n");
-    printf("satus Operation:  %i \n", status_operation);
+    printf("satus Operation:  %d \n", status_operation);
     
     return  validate_message(bite_read, bite_expected);
 }
