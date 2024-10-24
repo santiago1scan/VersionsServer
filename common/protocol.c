@@ -105,6 +105,7 @@ status_operation_socket receive_first_request(int socket, struct first_request *
     printf("----------- RECEIVE FIRST REQUEST------------- \n");
     printf("file_idUser:  %d\n", first_request_param->idUser);
     printf("file_request:  %d \n", first_request_param->request);
+    printf("_________________________________________________ \n");
 
     return validate_message(bytes_read, bytes_expected);
 }
@@ -117,6 +118,7 @@ status_operation_socket receive_file_request(int socket, struct file_request *fi
     printf("file_nameFile:  %s \n", file_request_param->nameFile);
     printf("file_sizeHashFile:  %d \n", file_request_param->sizeHashFile);
     printf("file_sizeNamefile:  %d \n", file_request_param->sizeNameFile);
+    printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
 }
 
@@ -126,6 +128,7 @@ status_operation_socket receive_file_transfer(int socket, struct file_transfer *
     printf("-----------RECEIVE FILE TRANSFER------------- \n");
     printf("file_comment:  %s \n", file_transfer_param->comment);
     printf("file_fileSize:  %d \n", file_transfer_param->filseSize);
+    printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
 }
 
@@ -134,7 +137,7 @@ status_operation_socket receive_status_code(int socket, return_code *status_oper
     ssize_t bytes_read = read(socket, (void*)status_operation, bytes_expected);    
     printf("-----------RECEIVE STATUS OPERATION------------- \n");
     printf("status Operation:  %d \n", status_operation);
-    
+    printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
 }
 
@@ -143,7 +146,7 @@ status_operation_socket receive_element_list(int socket, char elementList[SIZE_E
     ssize_t bytes_read = read(socket, (void*)elementList, bytes_expected);    
     printf("-----------RECEIVE ELEMENT LIST------------- \n");
     printf("Element List: %s\n", elementList);
-    
+    printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
 }
 
@@ -157,7 +160,11 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
         }
         totalBytesWritten += bytes_written;
     }
-    printf("Sent first request: idUser=%d, request=%d\n", first_request_param->idUser, first_request_param->request);
+    printf("-----------SEND ELEMENT LIST------------- \n");
+    printf("Element idUser: %d\n", first_request_param->idUser);
+    printf("Element idUser: %d\n", first_request_param->request);
+    printf("_________________________________________________ \n");
+    
     return OK;
 }
 
