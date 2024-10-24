@@ -56,7 +56,7 @@ return_code add(char * filename, char * comment, int socket);
  *
  * @param filename Nombre del archivo, NULL para listar todo el repositorio.
  */
-void list(char * filename);
+void list(char * filename, int socket);
 
 /**
  * @brief Obtiene una version del un archivo.
@@ -65,6 +65,6 @@ void list(char * filename);
  * @param version Numero secuencial de la version.
  * @return 1 en caso de exito, 0 si ocurre un error.
  */
-int get(char * filename, int version);
+int get(char * filename, int version, int socket);
 
 #endif

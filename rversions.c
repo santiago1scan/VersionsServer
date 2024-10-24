@@ -165,7 +165,7 @@ status_operation_socket actionGet(char * argument2, char * argument3, int idClie
 		printf("Error");
 		return ERROR;
 	}
-	if(get(argument2, atoi(argument3))== 0){
+	if(get(argument2, atoi(argument3), client_socket)== 0){
 		printf("Error in get");
 		return ERROR;
 	}	
@@ -189,7 +189,7 @@ status_operation_socket actionList(char * argument2, int idClient, int client_so
 		return ERROR;
 	}
 	 */
-	list(argument2);	
+	list(argument2, client_socket);	
 	return restult_first_request;
 }
 void usage() {

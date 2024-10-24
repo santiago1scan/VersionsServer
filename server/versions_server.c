@@ -298,7 +298,7 @@ return_code get(int socket, int idCliente) {
 				return VERSION_ERROR;
 
 			if(!retrieve_file(r.hash, socket, st.st_size));
-				return 1;
+				return VERSION_ERROR;
 			cont++;		
 		}
 	}

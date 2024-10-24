@@ -21,15 +21,6 @@
  */
 return_code create_version(char * filename, char * comment, file_version * result);
 
-/**
- * @brief Verifica si existe una version para un archivo
- *
- * @param filename Nombre del archivo
- * @param hash Hash del contenido
- *
- * @return 1 si la version existe, 0 en caso contrario.
- */
-int version_exists(char * filename, char * hash);
 
 /**
  * @brief Obtiene el hash de un archivo.
@@ -54,31 +45,25 @@ int copy(char * source, char * destination);
 *
 * @param filename Nombre del archivo
 * @param hash Hash del archivo: nombre del archivo en el repositorio
+* @param socket socket de conexion
+* @param sizeFile tamaño del archivo
 *
 * @return 1 si la operacion es exitosa, 0 en caso contrario.
 */
-int store_file(char * filename, char * hash);
+int store_file(char * filename, char * hash, int socket, int sizeFile);
 
 /**
 * @brief Almacena un archivo en el repositorio
 *
 * @param hash Hash del archivo: nombre del archivo en el repositorio
 * @param filename Nombre del archivo
-* 
+* @param socket socket de conexion
+* @param sizeFile tamaño del archivo
 * @return 1 si la operacion es exitosa, 0 en caso contrario.
 */
-int retrieve_file(char * hash, char * filename);
+int retrieve_file(char * filename, char * hash, int socket, int sizeFile);
 
-/**
- * @brief Adiciona una nueva version de un archivo.
- *
- * @param filename Nombre del archivo.
- * @param comment Comentario de la version.
- * @param hash Hash del contenido.
- *
- * @return 1 en caso de exito, 0 en caso de error.
- */
-int add_new_version(file_version * v);
+
 
 
 return_code create_version(char * filename, char * comment, file_version * result) {
@@ -115,13 +100,13 @@ return_code add(char * filename, char * comment, int client_socket) {
 	struct file_request *versionsSend = malloc(sizeof(struct file_request));
 	strncpy(versionsSend-> nameFile, filename, sizeof(versionsSend->nameFile) - 1);
     versionsSend->nameFile[sizeof(versionsSend->nameFile) - 1] = '\0'; 
-
+	versionsSend->sizeNameFile = sizeof(filename);
 	// 1. Crea la nueva version en memoria
 
 	create_version(filename, comment, &v);
 	strncpy(versionsSend->hashFile, v.hash, sizeof(versionsSend->hashFile) - 1);
     versionsSend->hashFile[sizeof(versionsSend->hashFile) - 1] = '\0'; 
-	if(write(client_socket, (void*)versionsSend, sizeof(struct file_request))== -1){
+	if(send_file_request(client_socket, (void *)&versionsSend )!= OK){
 		printf("Falla escritura");
 	}
 	size_t bitsRide;
@@ -135,8 +120,7 @@ return_code add(char * filename, char * comment, int client_socket) {
 	}
 
 	struct file_transfer *sendVersionsTransfer = malloc(sizeof(struct file_transfer ));
-	strncpy(sendVersionsTransfer->comment, comment, sizeof(sendVersionsTransfer->comment) - 1);
-    sendVersionsTransfer->comment[sizeof(sendVersionsTransfer->comment) - 1] = '\0'; 
+	
 	//Tengo que validar en todo lado el di cliente
 	// Obtiene la longitud del archivo
 	struct stat st;
@@ -145,35 +129,26 @@ return_code add(char * filename, char * comment, int client_socket) {
 	}
 	off_t file_size = st.st_size;
 	sendVersionsTransfer->filseSize = file_size;
-	if(write(client_socket, (void*)sendVersionsTransfer, sizeof(struct file_transfer))== -1){
+	strncpy(sendVersionsTransfer->comment, comment, sizeof(sendVersionsTransfer->comment) - 1);
+    sendVersionsTransfer->comment[sizeof(sendVersionsTransfer->comment) - 1] = '\0'; 
+	
+	if(send_file_transfer(client_socket, (void *)&sendVersionsTransfer)== OK){
 		printf("Falla escritura");
+	}
+	if(retrieve_file(v.hash,filename, client_socket, file_size) == 0){
+		printf("Envio de archivo fallida ");
 	}
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return VERSION_ADDED;
 }
 
-int add_new_version(file_version * v) {
-	// Abre el archivo versions.db en modo append 
-	//y verificamos que se haya abierto correctamente
-	FILE * fp;
-	fp = fopen(".versions/versions.db", "ab");
-	
-	if(fp == NULL)
-		return 0;
-	// Escribe la estructura v en el archivo, verifica que se haya escrito correctamente
-	// y cierra el archivo 
-	if( fwrite(v, sizeof(file_version), 1, fp) != 1){
-		fclose(fp);
-		return 0;
-	}
-	fclose(fp);
-	return 1;
-}
 
 
-void list(char * filename) {
 
+void list(char * filename, int socket) {
+	//char path= "versions";
 	//Abre el la base de datos de versiones (versions.db)
+	
 	FILE * fp = fopen(".versions/versions.db", "r");
 	file_version  r;
 	if(fp  == NULL ){
@@ -257,46 +232,30 @@ int copy(char * source, char * destination) {
     return 1;
 }
 
-int version_exists(char * filename, char * hash) {
-	//abre la base de datos de versiones .versions/versions.db
-	FILE * fp = fopen(".versions/versions.db", "rb");
 
-	if( fp == NULL)
-		return 0;
-	
-	file_version * versions;
-
-	// Obtiene el tamaño del archivo	
-	fseek(fp, 0, SEEK_END);
-	long fileSize = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-
-	// Obtiene la cantidad de registros en la base de datos
-	//Y reserva memoria para almacenarlos
-	int countVersions = fileSize / sizeof(file_version);
-	versions = (file_version *) malloc(fileSize*sizeof(file_version));
-	
-	if(versions == NULL){
-		fclose(fp);
-		return 0;
-	}
-
-	// Lee los registros de la base de datos
-	fread(versions, sizeof(file_version), countVersions, fp);
-	fclose(fp);
-	for(int i = 0; i < countVersions; i++)
-		if(strcmp(versions[i].filename, filename) == 0 && strcmp(versions[i].hash, hash) == 0)
-			return 1;
-	// Verifica si en la bd existe un registro que coincide con filename y hash
-	return 0;
-}
-
-int get(char * filename, int version) {
+int get(char * filename, int version, int socket) {
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente
+	file_version v;
+	struct file_request *versionsSend = malloc(sizeof(struct file_request));
+	strncpy(versionsSend-> nameFile, filename, sizeof(versionsSend->nameFile) - 1);
+    versionsSend->nameFile[sizeof(versionsSend->nameFile) - 1] = '\0'; 
+	
+	strncpy(versionsSend->hashFile, v.hash, sizeof(versionsSend->hashFile) - 1);
+    versionsSend->hashFile[sizeof(versionsSend->hashFile) - 1] = '\0'; 
+	if(send_file_request(socket, (void *)&versionsSend )!= OK){
+		printf("Falla escritura");
+	}
+	size_t bitsRide;
+	int versionsExits;
+	bitsRide = read(socket,&versionsExits, sizeof(int));
+	if(bitsRide != sizeof(int)){
+		return VERSION_ERROR;
+	}
+	send_file_request(socket, (void *)&versionsSend);
 	file_version r;
 	FILE * fp = fopen(".versions/versions.db", "rb");
-
+	if(store_file(filename, v.hash, socket, bitsRide))
 	if( fp == NULL)
 		return 0;
 	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
@@ -307,7 +266,7 @@ int get(char * filename, int version) {
 		//Si el registro corresponde al archivo buscado, lo restauramos
 		if(strcmp(r.filename,filename)==0){
 			if(cont == version){
-				if(!retrieve_file(r.hash, r.filename));
+				if(!retrieve_file(r.hash, r.filename, socket, 0));
 					return 1;
 			}
 			cont++;		
@@ -317,15 +276,15 @@ int get(char * filename, int version) {
 
 }
 
-int store_file(char * filename, char * hash) {
+int store_file(char * filename, char * hash, int socket, int sizeFile) {
 	char dst_filename[PATH_MAX];
 	snprintf(dst_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return copy(filename, dst_filename);
+	return receive_file(socket, dst_filename, sizeFile);
 }
 
-int retrieve_file(char * hash, char * filename) {
+int retrieve_file(char * hash, char * filename, int socket, int sizeFile) {
 	char src_filename[PATH_MAX];
 	snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return copy(src_filename, filename);
+	return send_file(socket, src_filename, sizeFile);
 }
 
