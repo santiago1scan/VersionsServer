@@ -109,9 +109,17 @@ int main(int argc, char *argv[]) {
 	int idClient = setup_idClient();
 	while(1){
 		type_request peticionRequest;
+		printf("NO para \n");
 		scanf("%s %s %s", order, argument2, argument3);
+		
 		if(EQUALS(order, "add")){
-			if(actionAdd(argument2, argument3, idClient, client_socket)){
+			status_operation_socket messageActionAdd =  actionAdd(argument2, argument3, idClient, client_socket);
+			if( messageActionAdd != OK ){
+				if(messageActionAdd == CLIENT_DISCONECT){
+					printf("serviodr desconecetado \n");
+					handle_terminate(0);
+				}
+					
 				printf("Error actionAdd");
 				continue;
 			}
@@ -132,6 +140,7 @@ int main(int argc, char *argv[]) {
 		
 		
 	}
+	printf("SI PARA \n");
 	exit(EXIT_SUCCESS);
 
 }
@@ -144,14 +153,14 @@ status_operation_socket actionAdd(char * argument2, char * argument3, int idClie
 	peticion.idUser = idClient;
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
-		printf("Error");
+		printf("Error \n");
 		return ERROR;
 	}
-	if(add(argument2, argument3, client_socket)== 0){
-		printf("Error in get");
+	if(add(argument2, argument3, client_socket)!= FILE_ADDED){
+		printf("Error in get \n");
 		return ERROR;
 	}	
-	return restult_first_request;
+	return OK;
 }
 
 status_operation_socket actionGet(char * argument2, char * argument3, int idClient, int client_socket){
@@ -162,11 +171,16 @@ status_operation_socket actionGet(char * argument2, char * argument3, int idClie
 	peticion.idUser = idClient;
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
-		printf("Error");
+		printf("Error \n");
 		return ERROR;
 	}
-	if(get(argument2, atoi(argument3), client_socket)== 0){
-		printf("Error in get");
+	int version = atoi(argument3);
+	if(version == 0){
+		printf("Escriba una version numerica \n");
+		return ERROR;
+	}
+	if(get(argument2, version, client_socket)== 0){
+		printf("Error in get \n");
 		return ERROR;
 	}	
 	return restult_first_request;

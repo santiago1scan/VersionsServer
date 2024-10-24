@@ -64,6 +64,13 @@ int store_file(char * filename, char * hash, int socket, int sizeFile);
 int retrieve_file(char * filename, char * hash, int socket, int sizeFile);
 
 
+/**
+ * @brief Adiciona una nueva version de un archivo.
+ *
+ * @param filename Nombre del archivo.
+ * @return 1 en caso de exito, 0 en caso de error.
+ */
+int getFileSize(char * filename);
 
 
 return_code create_version(char * filename, char * comment, file_version * result) {
@@ -95,48 +102,55 @@ return_code create_version(char * filename, char * comment, file_version * resul
 }
 
 return_code add(char * filename, char * comment, int client_socket) {
-
+	
 	file_version v;
-	struct file_request *versionsSend = malloc(sizeof(struct file_request));
-	strncpy(versionsSend-> nameFile, filename, sizeof(versionsSend->nameFile) - 1);
-    versionsSend->nameFile[sizeof(versionsSend->nameFile) - 1] = '\0'; 
-	versionsSend->sizeNameFile = sizeof(filename);
+	return_code status;
+	struct file_request versionsSend ;
+	strncpy(versionsSend.nameFile, filename, sizeof(versionsSend.nameFile) - 1);
+    versionsSend.nameFile[sizeof(versionsSend.nameFile) - 1] = '\0'; 
+
 	// 1. Crea la nueva version en memoria
 
 	create_version(filename, comment, &v);
-	strncpy(versionsSend->hashFile, v.hash, sizeof(versionsSend->hashFile) - 1);
-    versionsSend->hashFile[sizeof(versionsSend->hashFile) - 1] = '\0'; 
-	if(send_file_request(client_socket, (void *)&versionsSend )!= OK){
-		printf("Falla escritura");
-	}
-	size_t bitsRide;
-	int versionsExits;
-	bitsRide = read(client_socket,&versionsExits, sizeof(int));
-	if(bitsRide != sizeof(int)){
+	strncpy(versionsSend.hashFile, v.hash, sizeof(versionsSend.hashFile) - 1);
+    versionsSend.hashFile[sizeof(versionsSend.hashFile) - 1] = '\0'; 
+	if(send_file_request(client_socket, &versionsSend )!= OK){
+		printf("Falla escritura \n");
 		return VERSION_ERROR;
 	}
-	if(versionsExits == 1){
-		return VERSION_ALREADY_EXISTS;
+	if(receive_status_code(client_socket, &status) != OK){
+		printf("Falla al recibir del servidor \n");
+		return VERSION_ERROR;
+	}
+	if(status == VERSION_ALREADY_EXISTS){
+		return status;
 	}
 
-	struct file_transfer *sendVersionsTransfer = malloc(sizeof(struct file_transfer ));
-	
-	//Tengo que validar en todo lado el di cliente
-	// Obtiene la longitud del archivo
-	struct stat st;
-	if(stat(filename, &st) != 0){
+	int file_size = getFileSize(filename);
+	if(file_size == -1){
 		return VERSION_ERROR;
 	}
-	off_t file_size = st.st_size;
-	sendVersionsTransfer->filseSize = file_size;
-	strncpy(sendVersionsTransfer->comment, comment, sizeof(sendVersionsTransfer->comment) - 1);
-    sendVersionsTransfer->comment[sizeof(sendVersionsTransfer->comment) - 1] = '\0'; 
-	
-	if(send_file_transfer(client_socket, (void *)&sendVersionsTransfer)== OK){
-		printf("Falla escritura");
+	struct file_transfer sendVersionsTransfer;
+	sendVersionsTransfer.filseSize = file_size; 
+	strncpy(sendVersionsTransfer.comment, comment, sizeof(sendVersionsTransfer.comment) - 1);
+    sendVersionsTransfer.comment[sizeof(sendVersionsTransfer.comment) - 1] = '\0'; 
+	if(send_file_transfer(client_socket, &sendVersionsTransfer)== OK){
+		printf("Falla escritura \n");
+		return VERSION_ERROR;
 	}
-	if(retrieve_file(v.hash,filename, client_socket, file_size) == 0){
-		printf("Envio de archivo fallida ");
+	if(send_file(client_socket, filename, file_size) != 0){
+		printf("Error al mandar el archivo \n");
+		return VERSION_ERROR;
+	}
+	return_code satusOperation;
+	
+	if(receive_status_code(client_socket, &satusOperation ) != OK ){
+		printf("Error de conexion \n");
+		return VERSION_ERROR;
+	}
+	if(satusOperation != VERSION_ADDED){
+		printf("Error al agregar \n");
+		return VERSION_ERROR;
 	}
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return VERSION_ADDED;
@@ -287,4 +301,15 @@ int retrieve_file(char * hash, char * filename, int socket, int sizeFile) {
 	snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
 	return send_file(socket, src_filename, sizeFile);
 }
+
+
+int getFileSize(char * filename){
+	struct stat st;
+	if(stat(filename, &st) != 0){
+		perror("error obtener tamaño del archivo");
+		return -1;
+	}
+	return st.st_size;
+}
+
 
