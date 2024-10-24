@@ -114,44 +114,73 @@ return_code add(char * filename, char * comment, int client_socket) {
 	create_version(filename, comment, &v);
 	strncpy(versionsSend.hashFile, v.hash, sizeof(versionsSend.hashFile) - 1);
     versionsSend.hashFile[sizeof(versionsSend.hashFile) - 1] = '\0'; 
+
+	printf("-----------FILE REQUEST------------- \n");
+	printf("file_name:  %s \n", versionsSend.nameFile);
+	printf("file_hasfile:  %s \n", versionsSend.hashFile);
+
+
 	if(send_file_request(client_socket, &versionsSend )!= OK){
 		printf("Falla escritura \n");
 		return VERSION_ERROR;
+
 	}
+	printf("Se envio el sendRequest \n");
 	if(receive_status_code(client_socket, &status) != OK){
 		printf("Falla al recibir del servidor \n");
 		return VERSION_ERROR;
 	}
+	printf("Se recive el status code\n");
+	printf("-----------receive_status_request------------- \n");
+	printf("return code:  %i \n", status);
+	
+
+	
+	
 	if(status == VERSION_ALREADY_EXISTS){
+		printf("la version ya existe\n");
 		return status;
 	}
 
 	int file_size = getFileSize(filename);
 	if(file_size == -1){
+		printf("erro al leer el tamaño \n");
 		return VERSION_ERROR;
-	}
+	}	
 	struct file_transfer sendVersionsTransfer;
 	sendVersionsTransfer.filseSize = file_size; 
+	printf("Tamaño del archivo: %i \n", sendVersionsTransfer.filseSize );
 	strncpy(sendVersionsTransfer.comment, comment, sizeof(sendVersionsTransfer.comment) - 1);
     sendVersionsTransfer.comment[sizeof(sendVersionsTransfer.comment) - 1] = '\0'; 
-	if(send_file_transfer(client_socket, &sendVersionsTransfer)== OK){
+
+	printf("-----------FILE TRANSFER------------- \n");
+	printf("file_size:  %s \n", sendVersionsTransfer.filseSize);
+	printf("file_comment:  %s \n", sendVersionsTransfer.comment);
+
+
+
+	if(send_file_transfer(client_socket, &sendVersionsTransfer) != OK){
 		printf("Falla escritura \n");
 		return VERSION_ERROR;
 	}
+	printf("Se envio el fle transfer \n");
 	if(send_file(client_socket, filename, file_size) != 0){
 		printf("Error al mandar el archivo \n");
 		return VERSION_ERROR;
 	}
+	printf("Se envio el sendFIle\n");
 	return_code satusOperation;
 	
 	if(receive_status_code(client_socket, &satusOperation ) != OK ){
 		printf("Error de conexion \n");
 		return VERSION_ERROR;
 	}
+	printf("Se recibio el satus code del servidor \n");
 	if(satusOperation != VERSION_ADDED){
 		printf("Error al agregar \n");
 		return VERSION_ERROR;
 	}
+	printf("Se recibio el satus code del servidor archivo agregado \n");
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return VERSION_ADDED;
 }
