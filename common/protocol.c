@@ -113,7 +113,7 @@ status_operation_socket receive_first_request(int socket, struct first_request *
 status_operation_socket receive_file_request(int socket, struct file_request *file_request_param) {
     size_t bytes_expected = sizeof(struct file_request);
     ssize_t bytes_read = read(socket, (void*)file_request_param, bytes_expected);    
-    printf("-----------RECEIVE FILE REQUEST------------- \n");
+    printf("______________RECEIVE FILE REQUEST______________ \n");
     printf("file_hashfile:  %s \n", file_request_param->hashFile);
     printf("file_nameFile:  %s \n", file_request_param->nameFile);
     printf("file_sizeHashFile:  %d \n", file_request_param->sizeHashFile);
@@ -125,7 +125,7 @@ status_operation_socket receive_file_request(int socket, struct file_request *fi
 status_operation_socket receive_file_transfer(int socket, struct file_transfer *file_transfer_param) {
     size_t bytes_expected = sizeof(struct file_transfer);
     ssize_t bytes_read = read(socket, (void*)file_transfer_param, bytes_expected);   
-    printf("-----------RECEIVE FILE TRANSFER------------- \n");
+    printf("______________RECEIVE FILE TRANSFER_______________ \n");
     printf("file_comment:  %s \n", file_transfer_param->comment);
     printf("file_fileSize:  %d \n", file_transfer_param->filseSize);
     printf("_________________________________________________ \n");
@@ -136,7 +136,7 @@ status_operation_socket receive_status_code(int socket, return_code *status_oper
     size_t bytes_expected = sizeof(return_code);
     int number = *status_operation/1;
     ssize_t bytes_read = read(socket, (void*)status_operation, bytes_expected);    
-    printf("-----------RECEIVE STATUS OPERATION------------- \n");
+    printf("________________RECEIVE STATUS OPERATION______________ \n");
     printf("status Operation:  %d \n", status_operation);
     printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
@@ -145,7 +145,7 @@ status_operation_socket receive_status_code(int socket, return_code *status_oper
 status_operation_socket receive_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]) {
     size_t bytes_expected = SIZE_ELEMENT_LIST;
     ssize_t bytes_read = read(socket, (void*)elementList, bytes_expected);    
-    printf("-----------RECEIVE ELEMENT LIST------------- \n");
+    printf("____________RECEIVE ELEMENT LIST______________ \n");
     printf("Element List: %s\n", elementList);
     printf("_________________________________________________ \n");
     return validate_message(bytes_read, bytes_expected);
@@ -161,7 +161,7 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
         }
         totalBytesWritten += bytes_written;
     }
-    printf("-----------SEND ELEMENT LIST------------- \n");
+    printf("_____________SEND FIRST REQUEST_______________\n");
     printf("Element idUser: %d\n", first_request_param->idUser);
     printf("Element idUser: %d\n", first_request_param->request);
     printf("_________________________________________________ \n");
@@ -170,7 +170,7 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
 }
 
 status_operation_socket send_file_request(int socket, struct file_request *file_request_param) {
-    printf("send_file_request(%s,%s,%d)\n", file_request_param->nameFile, file_request_param->hashFile, file_request_param->version);
+    
     size_t size_struct = sizeof(struct file_request);
     file_request_param->sizeHashFile = strlen(file_request_param->hashFile);
     file_request_param->sizeNameFile = strlen(file_request_param->nameFile);
@@ -182,7 +182,15 @@ status_operation_socket send_file_request(int socket, struct file_request *file_
         }
         totalBytesWritten += bytes_written;
     }
-    printf("Sent file request: nameFile=%s, hashFile=%s, sizeNameFile=%d, sizeHashFile=%d\n", file_request_param->nameFile, file_request_param->hashFile, file_request_param->sizeNameFile, file_request_param->sizeHashFile);
+    printf("_____________SEND FILE REQUEST _______________\n");
+    printf("Element hashFile: %s\n", file_request_param->hashFile);
+    printf("Element nameFile: %s\n", file_request_param->nameFile);
+    printf("Element hashFile: %d\n", file_request_param->sizeHashFile);
+    printf("Element sizeNemaFIle: %d\n", file_request_param->sizeNameFile);
+    printf("Element sizeNemaFIle: %d\n", file_request_param->version);
+
+    printf("_________________________________________________ \n"   );
+    
     return OK;
 }
 
@@ -197,6 +205,8 @@ status_operation_socket send_file_transfer(int socket, struct file_transfer *fil
         }
         totalBytesWritten += bytes_written;
     }
+  
+    printf("_________________________________________________ \n"   );
     printf("Sent file transfer: fileSize=%d, comment=%s\n", file_transfer_param->filseSize, file_transfer_param->comment);
     return OK;
 }
