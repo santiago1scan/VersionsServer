@@ -32,24 +32,6 @@ return_code create_version(char * filename, char * hash, int idClient ,file_vers
 int version_exists(char * filename, int clientId,char * hash);
 
 /**
- * @brief Obtiene el hash de un archivo.
- * @param filename Nombre del archivo a obtener el hash
- * @param hash Buffer para almacenar el hash (HASH_SIZE)
- * @return Referencia al buffer, NULL si ocurre error
- */
-char *get_file_hash(char * filename, char * hash);
-
-/**
- * @brief Crea un arhcivo con la informacion dicha
- *
- * @param source Archivo fuente
- * @param destination Destino
- *
- * @return 1 si la operacion es exitosa, 0 en caso contrario.
- */
-int copy(char * source, char * destination);
-
-/**
 * @brief Almacena un archivo en el repositorio
 *
 * @param file info del archivo a guardar
@@ -131,7 +113,8 @@ return_code add(int socket, int idCliente) {
 
 	if(send_status_code(socket, response_user) != OK)
 		return VERSION_ERROR;
-	
+	if(existVersion)
+		return VERSION_ALREADY_EXISTS;
 	//3.Resibir el tamanio del archivo con el comentario
 	size_t size_file_transfer = sizeof(struct file_transfer);
 	struct file_transfer info_file_transfer;
@@ -187,12 +170,12 @@ void list(int socket, int idCliente) {
 	
 	struct file_request file;
 
-	if( send_file_request(socket, &file) != OK)
+	if( receive_file_request(socket, &file) != OK)
 		return;
 
-	char filename[PATH_MAX];
-	strncpy(filename, file.nameFile, PATH_MAX);
-	filename[PATH_MAX - 1] = '\0'; // Asegurarse de que la cadena esté terminada en nulo
+	char filename[file.sizeNameFile +1];
+	strncpy(filename, file.nameFile, file.sizeNameFile);
+	filename[file.sizeNameFile] = '\0'; // Asegurarse de que la cadena esté terminada en nulo
 	
 	//Abre el la base de datos de versiones (versions.db)
 	FILE * fp = fopen(".versions/versions.db", "r");
@@ -232,50 +215,6 @@ void list(int socket, int idCliente) {
 	send_element_list(socket, message);
 
 	fclose(fp);
-}
-
-char *get_file_hash(char * filename, char * hash) {
-	char *comando;
-	FILE * fp;
-	struct stat s;
-
-	//Verificar que el archivo existe y que se puede obtener el hash
-	if (stat(filename, &s) < 0 || !S_ISREG(s.st_mode)) {
-		perror("stat");
-		return NULL;
-	}
-
-	//Generar el comando para obtener el hash
-	sha256_hash_file_hex(filename, hash);
-
-	return hash;
-
-}
-
-int copy(char * source, char * destination) {
-    int dest_fd;
-    ssize_t bytesWritten;
-    size_t source_len = strlen(source);
-
-    // Abre el archivo destino en modo escritura (crea el archivo si no existe)
-    dest_fd = open(destination, O_WRONLY | O_CREAT | O_TRUNC, 0644);
-    if (dest_fd == -1) {
-        perror("Error al abrir el archivo destino");
-        return 0;
-    }
-
-    // Escribe el contenido de source en el archivo destino
-    bytesWritten = write(dest_fd, source, source_len);
-    if (bytesWritten != source_len) {
-        perror("Error al escribir en el archivo destino");
-        close(dest_fd);
-        return 0;
-    }
-
-    // Cierra el archivo destino
-    close(dest_fd);
-
-    return 1;
 }
 
 int version_exists(char * filename, int idClient,char * hash) {
@@ -338,6 +277,7 @@ return_code get(int socket, int idCliente) {
 
 	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
 	int cont = 1;
+	struct file_transfer file_transfer;
 	while(!feof(fp)){
 		if(fread(&r, sizeof(file_version), 1, fp) != 1)
 			break;
@@ -352,8 +292,6 @@ return_code get(int socket, int idCliente) {
 			if (stat(r.filename, &st) != 0) {
 				return VERSION_ERROR;
 			}
-
-			struct file_transfer file_transfer;
 			file_transfer.filseSize = st.st_size;
 			
 			if( send_file_transfer(socket, &file_transfer) != OK)
@@ -364,6 +302,11 @@ return_code get(int socket, int idCliente) {
 			cont++;		
 		}
 	}
+
+	file_transfer.filseSize = 0;
+	
+	send_file_transfer(socket, &file_transfer);
+
 	fclose(fp);
 
 }
