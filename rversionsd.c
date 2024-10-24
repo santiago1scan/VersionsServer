@@ -207,38 +207,33 @@ void *handler_user_thread(void *args){
 	size_t size_struct = sizeof(struct first_request); 
 	struct first_request *request = malloc(size_struct);
 
-	int bucle = 1;
-	while (bucle)
-	{	
-		switch (receive_first_request(clientSocket, request))
-		{
-		case ERROR_SOCKET:
-			bucle = 0;
-			break;
-		case CLIENT_DISCONECT:
-			bucle = 0;
-			break;
-		}
-		if(bucle== 0)
-			break;
-
-		switch (request->request)
-		{
-		case ADD:
-			printf("El usuario %d ha solicitado un add\n", clientSocket);
-			//add(clientSocket);
-			break;
-		case LIST:
-			printf("El usuario %d ha solicitado un list\n", clientSocket);
-			//list(clientSocket);
-			break;
-		case GET:
-			printf("El usuario %d ha solicitado un get\n", clientSocket);
-			//get(clientSocket);
+	while (1) {
+		int result = receive_first_request(clientSocket, request);
+		if (result == ERROR_SOCKET || result == CLIENT_DISCONECT) {
 			break;
 		}
 
+		printf("Cliente con id %d, solicito un %d\n", request->idUser, request->request);
+
+		if (request->request == ADD) {
+			printf("El usuario %d ha solicitado un add\n", request->idUser);
+			add(clientSocket, request->idUser);
+		} 
+		else{
+			printf("Ha pedido algo diferente de un add\n");
+		}
+		
+		// else if (request->request == LIST) {
+		// 	printf("El usuario %d ha solicitado un list\n", request->idUser);
+		// 	list(clientSocket, request->idUser);
+		// } else if (request->request == GET) {
+		// 	printf("El usuario %d ha solicitado un get\n", request->idUser);
+		// 	get(clientSocket, request->idUser);
+		// } else {
+		// 	printf("Solicitud desconocida del usuario %d\n", request->idUser);
+		// }
 	}
+
 	close(clientSocket);
 	delete_user(clientSocket);
 	free(request);
