@@ -12,7 +12,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-#define BUFFER_SIZE 256 /* Default buffer size */
+#define BUFFER_SIZE 1024 /* Default buffer size */
 #define COMMENT_SIZE 80 /** < Longitud del comentario */
 #define HASH_SIZE 256 /**< Longitud del hash incluyendo NULL*/
 #define PATH_MAX 4096 /**< Longitud maxima de una ruta de archivo. */
