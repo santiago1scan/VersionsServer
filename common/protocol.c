@@ -134,6 +134,7 @@ status_operation_socket receive_file_transfer(int socket, struct file_transfer *
 
 status_operation_socket receive_status_code(int socket, return_code *status_operation) {
     size_t bytes_expected = sizeof(return_code);
+    int number = *status_operation/1;
     ssize_t bytes_read = read(socket, (void*)status_operation, bytes_expected);    
     printf("-----------RECEIVE STATUS OPERATION------------- \n");
     printf("status Operation:  %d \n", status_operation);
@@ -211,7 +212,6 @@ status_operation_socket send_status_code(int socket, return_code code) {
         }
         totalBytesWritten += bytes_written;
     }
-    printf("Sent status code: %d\n", code);
     return OK;
 }
 

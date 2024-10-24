@@ -215,7 +215,7 @@ void *handler_user_thread(void *args){
 
 		if (request->request == ADD) {
 			printf("El usuario %d ha solicitado un add\n", request->idUser);
-			if(add(clientSocket, request->idUser) != FILE_ADDED){
+			if(add(clientSocket, request->idUser) != VERSION_ADDED){
 				printf("Error al intentar agrega archivo del usario %d\n", request->idUser);
 			}
 		} else if (request->request == LIST) {
