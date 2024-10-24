@@ -34,17 +34,17 @@ void handle_terminate(int sig);
 *@brief do the action to add 
 
  */
- status_operation_socket actionAdd();
+ status_operation_socket actionAdd(char * argument2, char * argument3, int idClient, int client_socket);
  /**
 *@brief do the action to add 
 
  */
- status_operation_socket actionGet();
+ status_operation_socket actionGet(char * argument2, char * argument3, int idClient, int client_socket);
  /**
 *@brief do the action to add 
 
  */
- status_operation_socket actionList();
+ status_operation_socket actionList(char * argument2, int idClient, int client_socket);
 
 /**
  * @brief setup the id client in a file or generate a new one
@@ -111,40 +111,23 @@ int main(int argc, char *argv[]) {
 		type_request peticionRequest;
 		scanf("%s %s %s", order, argument2, argument3);
 		if(EQUALS(order, "add")){
-			peticionRequest = ADD;
-			struct first_request peticion;
-			peticion.request = peticionRequest;
-			peticion.idUser = idClient;
-			if(write(client_socket, (void*)&peticion, sizeof(struct first_request))== -1){
-				printf("Falla escritura");
+			if(actionAdd(argument2, argument3, idClient, client_socket)){
+				printf("Error actionAdd");
+				continue;
 			}
-				//add(argument2, argument3);
 			
-			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "list")){
-			peticionRequest = LIST;
-			struct first_request peticion;
-			peticion.request = peticionRequest;
-			peticion.idUser = idClient;
-			if(write(client_socket, (void*) &peticion, sizeof(struct first_request))== -1){
-				printf("Falla escritura");
+			if(actionList(argument2, idClient, client_socket) != OK){
+				printf("Error actionLInsr");
+				continue;
 			}
-			//list(argument2);
-			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "get")){
-			peticionRequest = GET;
-			struct first_request peticion;
-			peticion.request = peticionRequest;
-			peticion.idUser = idClient;
-			status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
-			if(restult_first_request != OK){
-				printf("Error");
+			if(actionGet(argument2, argument3, idClient, client_socket) != OK){
+				printf("Error in actionGet");
+				continue;
 			}
-			
-			//get(argument2, argument3);
-			printf("El CLietnte solicita add\n");
 		}
 		
 		
@@ -153,13 +136,26 @@ int main(int argc, char *argv[]) {
 
 }
 
-status_operation_socket actionAdd(){
-	return 0;
+status_operation_socket actionAdd(char * argument2, char * argument3, int idClient, int client_socket){
+	
+	type_request peticionRequest = ADD;
+	struct first_request peticion;
+	peticion.request = peticionRequest;
+	peticion.idUser = idClient;
+	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
+	if(restult_first_request != OK){
+		printf("Error");
+		return ERROR;
+	}
+	if(add(argument2, argument3, client_socket)== 0){
+		printf("Error in get");
+		return ERROR;
+	}	
+	return restult_first_request;
 }
 
-status_operation_socket actionGet(){
-	int idClient = 0; //TODO ya vera santiago como lo hace jsjs
-	char *argument2, *argument3; //TODO ya vera santiago como lo hace jsjs
+status_operation_socket actionGet(char * argument2, char * argument3, int idClient, int client_socket){
+	
 	type_request peticionRequest = GET;
 	struct first_request peticion;
 	peticion.request = peticionRequest;
@@ -176,8 +172,25 @@ status_operation_socket actionGet(){
 	return restult_first_request;
 }
 
-status_operation_socket actionList(){
-	return 0;
+status_operation_socket actionList(char * argument2, int idClient, int client_socket){
+	
+	type_request peticionRequest = LIST;
+	struct first_request peticion;
+	peticion.request = peticionRequest;
+	peticion.idUser = idClient;
+	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
+	if(restult_first_request != OK){
+		printf("Error");
+		return ERROR;
+	}
+	/**
+	 * if(list(argument2)== NULL){
+		printf("Error in get");
+		return ERROR;
+	}
+	 */
+	list(argument2);	
+	return restult_first_request;
 }
 void usage() {
 	printf("Uso: rversions IP PORT Conecta el cliente a un servidor en la IP y puerto especificados.\n");

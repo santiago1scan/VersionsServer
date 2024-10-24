@@ -61,10 +61,8 @@ void list(char * filename);
 /**
  * @brief Obtiene una version del un archivo.
  * Sobreescribe la version existente.
- *
  * @param filename Nombre de archivo.
  * @param version Numero secuencial de la version.
- *
  * @return 1 en caso de exito, 0 si ocurre un error.
  */
 int get(char * filename, int version);
