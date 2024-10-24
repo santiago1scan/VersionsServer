@@ -80,31 +80,31 @@ status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
 status_operation_socket receive_first_request(int socket, struct first_request *first_request_param){
 	size_t bite_expected  = sizeof(struct first_request);
     size_t bite_read = read(socket, (void*)&first_request_param, bite_expected);    
-    return  validate_messagee(bite_read, bite_expected);
+    return  validate_message(bite_read, bite_expected);
 }
 
 status_operation_socket receive_file_request(int socket, struct file_request *file_request_param){
     size_t bite_expected  = sizeof(struct first_request);
     size_t bite_read = read(socket, (void*)&file_request_param, bite_expected);    
-    return  validate_messagee(bite_read, bite_expected);
+    return  validate_message(bite_read, bite_expected);
 }
 
 status_operation_socket receive_file_transfer(int socket, struct file_transfer *file_transfer_param ){
     size_t bite_expected  = sizeof(struct file_transfer);
     size_t bite_read = read(socket, (void*)&file_transfer_param, bite_expected);    
-    return  validate_messagee(bite_read, bite_expected);
+    return  validate_message(bite_read, bite_expected);
 }
 
 status_operation_socket receive_status_code(int socket,return_code *status_operation){
     size_t bite_expected  = sizeof(return_code);
     size_t bite_read = read(socket, (void*)&status_operation, bite_expected);    
-    return  validate_messagee(bite_read, bite_expected);
+    return  validate_message(bite_read, bite_expected);
 }
 
 status_operation_socket receive_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]){
     size_t bite_expected  = SIZE_ELEMENT_LIST;
     size_t bite_read = read(socket, (void*)&elementList, bite_expected);    
-    return  validate_messagee(bite_read, bite_expected);
+    return  validate_message(bite_read, bite_expected);
 }
 
 status_operation_socket send_first_request(int socket, struct first_request *first_request_param){

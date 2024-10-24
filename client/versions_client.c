@@ -131,7 +131,7 @@ return_code add(char * filename, char * comment, int client_socket) {
 		return VERSION_ERROR;
 	}
 	if(versionsExits == 1){
-		return VERSION_EXISTS;
+		return VERSION_ALREADY_EXISTS;
 	}
 
 	struct file_transfer *sendVersionsTransfer = malloc(sizeof(struct file_transfer ));

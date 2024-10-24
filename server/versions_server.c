@@ -64,9 +64,8 @@ int store_file(char * file, char * hash, int socket, int sizeFile);
 * @brief Almacena un archivo en el repositorio
 *
 * @param hash Hash del archivo: nombre del archivo en el repositorio
-* @param filename Nombre del archivo
-* @param sizeFile tamanio del archivo
 * @param socket socket ha comunicar
+* @param sizeFile tamanio del archivo
 * 
 * @return 1 si la operacion es exitosa, 0 en caso contrario.
 */
@@ -191,7 +190,9 @@ void list(int socket, int idCliente) {
 	if( send_file_request(socket, &file) != OK)
 		return;
 
-	char filename[PATH_MAX] = file.nameFile;
+	char filename[PATH_MAX];
+	strncpy(filename, file.nameFile, PATH_MAX);
+	filename[PATH_MAX - 1] = '\0'; // Asegurarse de que la cadena esté terminada en nulo
 	
 	//Abre el la base de datos de versiones (versions.db)
 	FILE * fp = fopen(".versions/versions.db", "r");
@@ -358,7 +359,7 @@ return_code get(int socket, int idCliente) {
 			if( send_file_transfer(socket, &file_transfer) != OK)
 				return VERSION_ERROR;
 
-			if(!retrieve_file(r.hash, r.filename, st.st_size));
+			if(!retrieve_file(r.hash, socket, st.st_size));
 				return 1;
 			cont++;		
 		}

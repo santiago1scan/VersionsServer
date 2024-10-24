@@ -112,41 +112,36 @@ int main(int argc, char *argv[]) {
 		scanf("%s %s %s", order, argument2, argument3);
 		if(EQUALS(order, "add")){
 			peticionRequest = ADD;
-			struct first_request *peticion = malloc(sizeof(struct first_request));
-			peticion->request = peticionRequest;
-			peticion->idUser = idClient;
-			if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
+			struct first_request peticion;
+			peticion.request = peticionRequest;
+			peticion.idUser = idClient;
+			if(write(client_socket, (void*)&peticion, sizeof(struct first_request))== -1){
 				printf("Falla escritura");
 			}
-			free(peticion);
 				//add(argument2, argument3);
 			
 			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "list")){
 			peticionRequest = LIST;
-			struct first_request *peticion = malloc(sizeof(struct first_request));
-			peticion->request = peticionRequest;
-			peticion->idUser = idClient;
-			if(write(client_socket, (void*)peticion, sizeof(struct first_request))== -1){
+			struct first_request peticion;
+			peticion.request = peticionRequest;
+			peticion.idUser = idClient;
+			if(write(client_socket, (void*) &peticion, sizeof(struct first_request))== -1){
 				printf("Falla escritura");
 			}
-			free(peticion);
 			//list(argument2);
 			printf("El CLietnte solicita add\n");
 		}
 		if(EQUALS(order, "get")){
 			peticionRequest = GET;
-			struct first_request *peticion = malloc(sizeof(struct first_request));
-			peticion->request = peticionRequest;
-			peticion->idUser = idClient;
-			status_operation_socket restult_first_request = send_first_request(client_socket, peticionRequest);
+			struct first_request peticion;
+			peticion.request = peticionRequest;
+			peticion.idUser = idClient;
+			status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 			if(restult_first_request != OK){
 				printf("Error");
 			}
-			
-			
-			free(peticion);
 			
 			//get(argument2, argument3);
 			printf("El CLietnte solicita add\n");
@@ -163,16 +158,18 @@ status_operation_socket actionAdd(){
 }
 
 status_operation_socket actionGet(){
-	peticionRequest = GET;
-	struct first_request *peticion = malloc(sizeof(struct first_request));
-	peticion->request = peticionRequest;
-	peticion->idUser = idClient;
-	status_operation_socket restult_first_request = send_first_request(client_socket, peticionRequest);
+	int idClient = 0; //TODO ya vera santiago como lo hace jsjs
+	char *argument2, *argument3; //TODO ya vera santiago como lo hace jsjs
+	type_request peticionRequest = GET;
+	struct first_request peticion;
+	peticion.request = peticionRequest;
+	peticion.idUser = idClient;
+	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
 		printf("Error");
 		return ERROR;
 	}
-	if(get(argument2, argument3)) == 0{
+	if(get(argument2, atoi(argument3))== 0){
 		printf("Error in get");
 		return ERROR;
 	}	

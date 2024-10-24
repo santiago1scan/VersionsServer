@@ -42,18 +42,6 @@ typedef  struct __attribute__((aligned(512))) {
 }file_version;
 
 /**
- * @brief Codigo de retorno de operacion
- */
-typedef enum {
-	VERSION_ERROR, /*!< Error no especificado */
-	VERSION_CREATED, /*!< Version creada */
-	VERSION_ADDED, /*!< Version agregada */
-	VERSION_ALREADY_EXISTS, /*!< Version ya existe */
-	FILE_ADDED, /*<! Archivo adicionado  */
-	/* .. */
-}return_code;
-
-/**
  * @brief Adiciona un archivo al repositorio.
  * @param socket socket ha comunicar
  * @param idCliente id del cliente
