@@ -289,6 +289,9 @@ void handle_get(int socket, int idUser){
 	case VERSION_ERROR:
 		printf("> Error listing the versions of the user %d\n", idUser);
 		break;
+	case VERSION_NOT_EXISTS:
+		printf("> The version not exists for the user %d\n", idUser);
+		break;
 	}
 }
 
@@ -297,7 +300,7 @@ void handle_list(int socket, int idUser){
 	switch (list(socket, idUser))
 	{
 	case VERSION_ADDED:
-		printf("> The versions has been geted for the user %d\n", idUser);
+		printf("> The versions has been listed for the user %d\n", idUser);
 		break;
 	case VERSION_ERROR:
 		printf("> Error geting the versions of the user %d\n", idUser);
