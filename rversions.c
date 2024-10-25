@@ -156,7 +156,7 @@ status_operation_socket actionAdd(char * argument2, char * argument3, int idClie
 		printf("Error General  rversions\n");
 		return ERROR;
 	}
-	if(add(argument2, argument3, client_socket)!= FILE_ADDED){
+	if(add(argument2, argument3, client_socket) != FILE_ADDED){
 		printf("Error in add rversions\n");
 		return ERROR;
 	}	

@@ -180,37 +180,32 @@ return_code add(char * filename, char * comment, int client_socket) {
 
 
 void list(char * filename, int socket) {
-	//char path= "versions";
-	//Abre el la base de datos de versiones (versions.db)
-	
-	FILE * fp = fopen(".versions/versions.db", "r");
-	file_version  r;
-	if(fp  == NULL ){
-		return;
+
+	struct file_request versionsSend ;
+	strncpy(versionsSend.nameFile, filename, sizeof(versionsSend.nameFile) - 1);
+    versionsSend.nameFile[sizeof(versionsSend.nameFile) - 1] = '\0'; 
+
+	if(send_file_request(socket, &versionsSend )!= OK){
+		printf("Falla escritura \n");
+
+
 	}
-
-	//Leer hasta el fin del archivo 
-	int cont = 1;
-	while(!feof(fp)){
-		
-		//Realizar una lectura y retornar
-		if(fread(&r, sizeof(file_version), 1, fp) != 1){
-			break;
+	printf("Se envio el sendRequest \n");
+	char elementList[SIZE_ELEMENT_LIST];
+	int count = 0;
+	do{
+		if(receive_element_list(socket, elementList)!= OK){
+			printf("!!!!!ERROR al recibir element dentro del whilelist\n");
+				
 		}
-
-		if(filename == NULL){
-			//Si filename es NULL, muestra todos los registros.
-			printf("%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
-			cont = cont + 1;
-		
-		}else if(strcmp(r.filename,filename)==0){
-			printf("%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
-			cont = cont + 1;
-		}
-		//Si el registro corresponde al archivo buscado, imprimir
-		//Muestra los registros cuyo nombre coincide con filename.
-	}	
-	fclose(fp);
+		else{
+			count= count +1;
+			printf("%s \n",elementList);
+		}	
+	}while(strcmp(elementList, " ") != 0);
+	if(count == 1 ){
+		printf("no se encontro versionse a listar");
+	}
 }
 
 char *get_file_hash(char * filename, char * hash) {
