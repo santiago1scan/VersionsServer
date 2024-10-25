@@ -188,7 +188,6 @@ status_operation_socket send_file_request(int socket, struct file_request *file_
 }
 
 status_operation_socket send_file_transfer(int socket, struct file_transfer *file_transfer_param) {
-    printf("send_file_transfer(%d, %s) \n", file_transfer_param->filseSize, file_transfer_param->comment);
     size_t size_struct = sizeof(struct file_transfer);
     ssize_t totalBytesWritten = 0;
     while (totalBytesWritten < size_struct) {
@@ -220,17 +219,10 @@ status_operation_socket send_status_code(int socket, return_code code) {
 
 status_operation_socket send_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]) {
     printf("send_element_list(%s)\n", elementList);
+    printf("taaño string enviado %d\n", strlen(elementList));
     size_t size_struct = SIZE_ELEMENT_LIST;
-    ssize_t totalBytesWritten = 0;
-    while (totalBytesWritten < size_struct) {
-        ssize_t bytes_written = write(socket, elementList + totalBytesWritten, size_struct - totalBytesWritten);
-        if (bytes_written < 0) {
-            return ERROR_SOCKET;
-        }
-        totalBytesWritten += bytes_written;
-    }
-    printf("Sent element list: %s\n", elementList);
-    return OK;
+    ssize_t bytes_written = write(socket, (void *) elementList,SIZE_ELEMENT_LIST);
+    return validate_message(bytes_written, size_struct);
 }
 
 status_operation_socket validate_message(int bytes_int, int bytes_expected) {

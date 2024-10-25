@@ -187,29 +187,29 @@ return_code list(int socket, int idCliente) {
 	int cont = 1;
 	char message[SIZE_ELEMENT_LIST];
 	while(!feof(fp)){
-		
 		//Realizar una lectura y retornar
 		if(fread(&r, sizeof(file_version), 1, fp) != 1){
 			break;
 		}
-
+		printf("Iteracion del archivo %s, con version %d del cliente %d\n", r.filename, cont, r.idCliente);
 		if(strcmp(filename, "") ==0){
 			//Si filename es NULL, muestra todos los registros.
-			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
+			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s", cont, r.filename, r.comment, r.hash);
+			if( send_element_list(socket, message) != OK)
+			break;
 			cont = cont + 1;
 		
 		}else if(EQUALS(r.filename,filename) && r.idCliente == idCliente){
-			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s \n", cont, r.filename, r.comment, r.hash);
+			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s", cont, r.filename, r.comment, r.hash);
+			if( send_element_list(socket, message) != OK)
+			break;
 			cont = cont + 1;
 		}
-
-		if( send_element_list(socket, message) != OK)
-			break;
 		//Si el registro corresponde al archivo buscado, imprimir
 		//Muestra los registros cuyo nombre coincide con filename.
 	}	
 
-	snprintf(message, SIZE_ELEMENT_LIST, " ");
+	snprintf(message, SIZE_ELEMENT_LIST, "END");
 
 	send_element_list(socket, message);
 
