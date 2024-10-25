@@ -54,6 +54,27 @@ void *handler_user_thread(void *args);
 void delete_user(int socket);
 
 /**
+ * @brief Handle the add request of the user
+ * @param socket socket of the user
+ * @param idUser id of the user
+ */
+void handle_add(int socket, int idUser);
+
+/**
+ * @brief Handle the get request of the user
+ * @param socket socket of the user
+ * @param idUser id of the user
+ */
+void handle_get(int socket, int idUser);
+
+/**
+ * @brief Handle the list request of the user
+ * @param socket socket of the user
+ * @param idUser id of the user
+ */
+void handle_list(int socket, int idUser);
+
+/**
  * @brief Structure to save the actives users
  */
 struct Server{
@@ -93,7 +114,7 @@ int main(int argc, char *argv[]) {
 		printf("Invalid port, it mus be numeric\n");
 		exit(EXIT_FAILURE);
 	}
-
+	system("clear");
 	//Empezamos a inicializar el servidor
 	printf("> Starting server\n");
 
@@ -213,22 +234,17 @@ void *handler_user_thread(void *args){
 			break;
 		}
 
-		if (request->request == ADD) {
-			printf("El usuario %d ha solicitado un add\n", request->idUser);
-			if(add(clientSocket, request->idUser) != VERSION_ADDED){
-				printf("Error al intentar agrega archivo del usario %d\n", request->idUser);
-			}
-		} else if (request->request == LIST) {
-			printf("El usuario %d ha solicitado un list\n", request->idUser);
-			list(clientSocket, request->idUser);
-		} else if (request->request == GET) {
-			printf("El usuario %d ha solicitado un get\n", request->idUser);
-			get(clientSocket, request->idUser);
-		} else {
+		if (request->request == ADD) 
+			handle_add(clientSocket, request->idUser);
+		else if (request->request == LIST)
+			handle_list(clientSocket, request->idUser);
+		else if (request->request == GET)
+			handle_get(clientSocket, request->idUser);
+		else
 			printf("Solicitud desconocida del usuario %d\n", request->idUser);
-		}
 	}
 
+	printf("> Cliente con id %d se ha desconectado\n", request->idUser);
 	close(clientSocket);
 	delete_user(clientSocket);
 	free(request);
@@ -242,4 +258,50 @@ void delete_user(int socket){
 	myServer->socketsUsers[i] = -1;
 	myServer->countUsers--;
 	pthread_mutex_unlock(&mutexServer);
+}
+
+
+void handle_add(int socket, int idUser){
+	printf(" -- El usuario %d ha solicitado un add --\n", idUser);
+
+	switch (add(socket, idUser))
+	{
+	case VERSION_ERROR:
+		printf("> Error adding the new version of the user %d\n", idUser);
+		break;
+	case VERSION_ALREADY_EXISTS:
+		printf("> The version already exists for the user %d\n", idUser);
+		break;
+	case VERSION_ADDED:
+		printf("> The version has been added for the user %d\n", idUser);
+		break;
+	default:
+		break;
+	}
+}
+
+void handle_get(int socket, int idUser){
+	printf("--El usuario %d ha solicitado un get--\n", idUser);
+	switch (get(socket, idUser))
+	{
+	case VERSION_ADDED:
+		printf("> The versions has been listed for the user %d\n", idUser);
+		break;
+	case VERSION_ERROR:
+		printf("> Error listing the versions of the user %d\n", idUser);
+		break;
+	}
+}
+
+void handle_list(int socket, int idUser){
+	printf("-- El usuario %d ha solicitado un list --\n", idUser);
+	switch (list(socket, idUser))
+	{
+	case VERSION_ADDED:
+		printf("> The versions has been geted for the user %d\n", idUser);
+		break;
+	case VERSION_ERROR:
+		printf("> Error geting the versions of the user %d\n", idUser);
+		break;
+	}
 }
