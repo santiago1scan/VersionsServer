@@ -168,10 +168,14 @@ return_code list(int socket, int idCliente) {
 	//1. Resibimos la informacion del archivo
 	
 	struct file_request file;
+	char message[SIZE_ELEMENT_LIST];
 
-	if( receive_file_request(socket, &file) != OK)
+	if( receive_file_request(socket, &file) != OK){
+		printf("Entra linea 174\n");
+		snprintf(message, SIZE_ELEMENT_LIST, "END");
+		send_element_list(socket, message);
 		return VERSION_ERROR;
-
+	}
 	char filename[file.sizeNameFile +1];
 	strncpy(filename, file.nameFile, file.sizeNameFile);
 	filename[file.sizeNameFile] = '\0'; // Asegurarse de que la cadena esté terminada en nulo
@@ -180,12 +184,15 @@ return_code list(int socket, int idCliente) {
 	FILE * fp = fopen(".versions/versions.db", "r");
 	file_version  r;
 	if(fp  == NULL ){
+		printf("Entra linea 187\n");
+		snprintf(message, SIZE_ELEMENT_LIST, "END");
+		send_element_list(socket, message);
 		return VERSION_ERROR;
 	}
 
 	//Leer hasta el fin del archivo 
 	int cont = 1;
-	char message[SIZE_ELEMENT_LIST];
+
 	while(!feof(fp)){
 		//Realizar una lectura y retornar
 		if(fread(&r, sizeof(file_version), 1, fp) != 1){
@@ -210,7 +217,6 @@ return_code list(int socket, int idCliente) {
 	}	
 
 	snprintf(message, SIZE_ELEMENT_LIST, "END");
-
 	send_element_list(socket, message);
 
 	fclose(fp);

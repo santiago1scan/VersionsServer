@@ -136,13 +136,29 @@ status_operation_socket receive_status_code(int socket, return_code *status_oper
 }
 
 status_operation_socket receive_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]) {
-    size_t bytes_expected = SIZE_ELEMENT_LIST;
-    ssize_t bytes_read = read(socket, (void*)elementList, bytes_expected);    
+    size_t size_struct = SIZE_ELEMENT_LIST;
+    ssize_t totalBytesRead = 0;
+
+    while (totalBytesRead < size_struct) {
+        ssize_t bytes_read = read(socket, elementList + totalBytesRead, size_struct - totalBytesRead);
+        if (bytes_read < 0) {
+            perror("Error reading from socket");
+            return ERROR_SOCKET;
+        } else if (bytes_read == 0) {
+            // El cliente cerró la conexión
+            return CLIENT_DISCONECT;
+        }
+        totalBytesRead += bytes_read;
+    }
+
+    printf("Received element list: %s\n", elementList);
+    printf("tamaño string recibido %zu\n", strlen(elementList));
+  
     printf("____________RECEIVE ELEMENT LIST______________ \n");
     printf("Element List: %s\n", elementList);
     printf("TAMAÑO ELEMENLIST : ------------------------------  %d  \n", strlen(elementList));
     printf("_________________________________________________ \n");
-    return validate_message(bytes_read, bytes_read);
+    return OK;
 }
 
 status_operation_socket send_first_request(int socket, struct first_request *first_request_param) {
@@ -222,10 +238,21 @@ status_operation_socket send_status_code(int socket, return_code code) {
 
 status_operation_socket send_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]) {
     printf("send_element_list(%s)\n", elementList);
-    printf("taaño string enviado %d\n", strlen(elementList));
+    printf("tamaño string enviado %zu\n", strlen(elementList));
+
     size_t size_struct = SIZE_ELEMENT_LIST;
-    ssize_t bytes_written = write(socket, (void *) elementList,SIZE_ELEMENT_LIST);
-    return validate_message(bytes_written, size_struct);
+    ssize_t totalBytesWritten = 0;
+
+    while (totalBytesWritten < size_struct) {
+        ssize_t bytes_written = write(socket, elementList + totalBytesWritten, size_struct - totalBytesWritten);
+        if (bytes_written < 0) {
+            perror("Error writing to socket");
+            return ERROR_SOCKET;
+        }
+        totalBytesWritten += bytes_written;
+    }
+
+    return OK;
 }
 
 status_operation_socket validate_message(int bytes_int, int bytes_expected) {
