@@ -195,23 +195,27 @@ void list(char * filename, int socket) {
 	int count = 0;
 	
 	do{
-		
-		if(receive_element_list(socket, elementList)!= OK){
-			
-			printf("!!!!!ERROR al recibir element dentro del whilelist\n");
-			
-		}else{
+		status_operation_socket receiveElement = receive_element_list(socket, elementList);	
+		if(receiveElement != OK){
+			printf("ERROR ELEMENT LIST: %d \n",receiveElement);
+
+			break;
+		}else if(receiveElement == INVALID_RESPONSE){
+			continue;
+		}
+		else{
 			if(strcmp(elementList, "END")== 0){
 				break;
-			}
-		}
+			}else if(strlen(elementList) != 0 ){
+				count= count +1;
+				printf("%s \n",elementList);
+			}	
 
-		count= count +1;
-		printf("%s \n",elementList);
-
+		} 
+		
 	}while(1);
 	if(count == 0 ){
-		printf("no se encontro versionse a listar");
+		printf("no se encontro versionse a listar \n");
 	}
 }
 

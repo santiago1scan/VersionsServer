@@ -136,13 +136,15 @@ status_operation_socket receive_status_code(int socket, return_code *status_oper
 }
 
 status_operation_socket receive_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]) {
-    size_t bytes_expected = SIZE_ELEMENT_LIST;
+    size_t bytes_expected = sizeof(elementList);
     ssize_t bytes_read = read(socket, (void*)elementList, bytes_expected);    
     printf("____________RECEIVE ELEMENT LIST______________ \n");
-    printf("Element List: %s\n", elementList);
-    printf("TAMAÑO ELEMENLIST : ------------------------------  %d  \n", strlen(elementList));
-    printf("_________________________________________________ \n");
-    return validate_message(bytes_read, bytes_read);
+     printf("Element List: %s\n", elementList);
+     printf("TAMAÑO ELEMENLIST : ------------------------------  %d  \n", strlen(elementList));
+     printf("BYTES LEIDOS : ------------------------------  %d  \n", bytes_read);
+     printf("BYTE EXPECTED : ------------------------------  %d  \n", bytes_expected);
+     printf("_________________________________________________ \n");
+    return validate_message(bytes_read, bytes_expected);
 }
 
 status_operation_socket send_first_request(int socket, struct first_request *first_request_param) {
