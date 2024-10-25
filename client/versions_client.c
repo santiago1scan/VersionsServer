@@ -266,42 +266,32 @@ int get(char * filename, int version, int socket) {
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente
 	file_version v;
-	struct file_request *versionsSend = malloc(sizeof(struct file_request));
-	strncpy(versionsSend-> nameFile, filename, sizeof(versionsSend->nameFile) - 1);
-    versionsSend->nameFile[sizeof(versionsSend->nameFile) - 1] = '\0'; 
+	struct file_request versionsSend;
+	strncpy(versionsSend.nameFile, filename, sizeof(versionsSend.nameFile) - 1);
+    versionsSend.nameFile[sizeof(versionsSend.nameFile) - 1] = '\0'; 
 	
-	strncpy(versionsSend->hashFile, v.hash, sizeof(versionsSend->hashFile) - 1);
-    versionsSend->hashFile[sizeof(versionsSend->hashFile) - 1] = '\0'; 
+	versionsSend.version = version;
+
 	if(send_file_request(socket, (void *)&versionsSend )!= OK){
-		printf("Falla escritura");
+		printf("Falla escritura\n");
 	}
-	size_t bitsRide;
-	int versionsExits;
-	bitsRide = read(socket,&versionsExits, sizeof(int));
-	if(bitsRide != sizeof(int)){
+
+	struct file_transfer info_file;
+	
+	if(receive_file_transfer(socket, &info_file) != OK){
 		return VERSION_ERROR;
 	}
-	send_file_request(socket, (void *)&versionsSend);
-	file_version r;
-	FILE * fp = fopen(".versions/versions.db", "rb");
-	if(store_file(filename, v.hash, socket, bitsRide))
-	if( fp == NULL)
-		return 0;
-	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
-	int cont = 1;
-	while(!feof(fp)){
-		if(fread(&r, sizeof(file_version), 1, fp) != 1)
-			break;
-		//Si el registro corresponde al archivo buscado, lo restauramos
-		if(strcmp(r.filename,filename)==0){
-			if(cont == version){
-				if(!retrieve_file(r.hash, r.filename, socket, 0));
-					return 1;
-			}
-			cont++;		
-		}
+
+	if(info_file.filseSize == 0){
+		return VERSION_NOT_EXISTS;
 	}
-	fclose(fp);
+	
+	if(receive_file(socket, filename, info_file.filseSize) != 0){
+		printf("!!!!!!!!!Error al recibir el archivo \n");
+		return VERSION_ERROR;
+	}
+
+	return VERSION_ADDED;
 
 }
 
