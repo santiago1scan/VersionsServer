@@ -111,47 +111,43 @@ int main(int argc, char *argv[]) {
     char line[LINESIZE], argument2[PATH_MAX], argument3[PATH_MAX];
     size_t version;
     return_code result;
-	while(1){
+	while (1) {
 		type_request peticionRequest;
 		printf("Ingrese la orden \n");
-		
+
 		fgets(line, LINESIZE, stdin);
-        line[strlen(line) - 1] = '\0';
-		
-		if(sscanf(line, "add %s \"%[^\"]\"",argument2, argument3) == 2)
-		{
-			status_operation_socket messageActionAdd =  actionAdd(argument2, argument3, idClient, client_socket);
-			if( messageActionAdd != OK ){
-				if(messageActionAdd == CLIENT_DISCONECT){
-					printf("serviodr desconecetado \n");
+		line[strlen(line) - 1] = '\0';
+
+		if (sscanf(line, "add %s \"%[^\"]\"", argument2, argument3) == 2) {
+			status_operation_socket messageActionAdd = actionAdd(argument2, argument3, idClient, client_socket);
+			if (messageActionAdd != OK) {
+				if (messageActionAdd == CLIENT_DISCONECT) {
+					printf("Servidor desconectado \n");
 					handle_terminate(0);
 				}
-					
-				printf("Error actionAdd rversions\n");
+				printf("Error en actionAdd rversions\n");
 				continue;
 			}
-			
-		}
-		if (sscanf(line, "list %s", argument2) == 1)
-		{
-			if(actionList(argument2, idClient, client_socket) != OK){
-				printf("Error actionLInsr rversions\n");
+		} else if (sscanf(line, "list %s", argument2) == 1) {
+			if (actionList(argument2, idClient, client_socket) != OK) {
+				printf("Error en actionList rversions\n");
 				continue;
 			}
 			printf("AQUI TERMINA_______________________ \n");
-		}
-		if(sscanf(line, "get %s %s", argument2, argument3) == 2)
-		{
-			if(actionGet(argument2, argument3, idClient, client_socket) != OK){
-				printf("Error in actionGet rversions\n");
+		} else if (sscanf(line, "get %s %s", argument2, argument3) == 2) {
+			if (actionGet(argument2, argument3, idClient, client_socket) != OK) {
+				printf("Error en actionGet rversions\n");
 				continue;
 			}
+		} else if (strcmp(line, "list") == 0) {
+			if (actionList("", idClient, client_socket) != OK) {
+				printf("Error en actionList rversions\n");
+				continue;
+			}
+			printf("AQUI TERMINA_______________________ \n");
+		} else {
+			printf("Comando no reconocido: %s\n", line);
 		}
-		if (sscanf(line, "list") == 0){
-			printf("listar: ");
-		}
-		
-		
 	}
 	printf("SI PARA \n");
 	exit(EXIT_SUCCESS);
