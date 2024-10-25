@@ -46,6 +46,12 @@ void handle_terminate(int sig);
  */
  status_operation_socket actionList(char * argument2, int idClient, int client_socket);
 
+/**	
+ * @param filename nombre/ ruta del archivo 
+ * @return return code 
+ */
+ return_code validate_exist(char * filename);
+
 /**
  * @brief setup the id client in a file or generate a new one
  * @return int id of the client
@@ -125,24 +131,20 @@ int main(int argc, char *argv[]) {
 					printf("Servidor desconectado \n");
 					handle_terminate(0);
 				}
-				printf("Error en actionAdd rversions\n");
-				
 				continue;
 			}
 		} else if (sscanf(line, "list %s", argument2) == 1) {
 			if (actionList(argument2, idClient, client_socket) != OK) {
-				printf("Error en actionList rversions\n");
 				continue;
 			}
 			printf("_______________________ \n");
 		} else if (sscanf(line, "get %s %s", argument2, argument3) == 2) {
 			if (actionGet(argument2, argument3, idClient, client_socket) != OK) {
-				printf("Error en actionGet rversions\n");
 				continue;
-			}
+			}	
 		} else if (strcmp(line, "list") == 0) {
 			if (actionList("", idClient, client_socket) != OK) {
-				printf("Error en actionList rversions\n");
+
 				continue;
 			}
 			printf("_______________________ \n");
@@ -162,13 +164,17 @@ status_operation_socket actionAdd(char * argument2, char * argument3, int idClie
 	struct first_request peticion;
 	peticion.request = peticionRequest;
 	peticion.idUser = idClient;
+	
+	if(validate_exist(argument2) == VERSION_ERROR){
+		printf("el documento no existe o es inaccesible \n ");
+		return ERROR;
+	}
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
-		printf("Error General  rversions\n");
+		printf("--------Error first Request  rvs-------\n");
 		return ERROR;
 	}
 	if(add(argument2, argument3, client_socket)!= VERSION_ADDED){
-		printf("Error in add rversions\n");
 		return ERROR;
 	}	
 	return OK;
@@ -265,4 +271,15 @@ int setup_idClient() {
 
         return id;
     }
+}
+
+return_code validate_exist(char * filename){
+	struct stat s;
+	if(stat(filename, &s) != 0){
+		
+		return VERSION_ERROR;
+	}
+	return VERSION_ALREADY_EXISTS;
+
+	
 }

@@ -114,7 +114,7 @@ return_code add(char * filename, char * comment, int client_socket) {
 	create_version(filename, comment, &v);
 	strncpy(versionsSend.hashFile, v.hash, sizeof(versionsSend.hashFile) - 1);
     versionsSend.hashFile[sizeof(versionsSend.hashFile) - 1] = '\0'; 
-	printf("HASH========== %s",v.hash);
+	
 
 
 	if(send_file_request(client_socket, &versionsSend )!= OK){
@@ -122,9 +122,9 @@ return_code add(char * filename, char * comment, int client_socket) {
 		return VERSION_ERROR;
 
 	}
-	printf("Se envio el sendRequest \n");
+	
 	if(receive_status_code(client_socket, &status) != OK){
-		printf("!!!!!!!!!Falla al recibir del servidor \n");
+		printf("-----------------¡Falla al recibir del servidor!-----------------\n");
 		return VERSION_ERROR;
 	}
 
@@ -132,13 +132,13 @@ return_code add(char * filename, char * comment, int client_socket) {
 	
 	
 	if(status == VERSION_ALREADY_EXISTS){
-		printf("!!!!!!!!!la version ya existe\n");
+		printf("-----------la version ya existe en el servidor!-------------\n");
 		return status;
 	}
 
 	int file_size = getFileSize(filename);
 	if(file_size == -1){
-		printf("!!!!!!!!!!!!!!!!erro al leer el tamaño \n");
+		printf("--------------!erro al leer el tamaño ----------------\n");
 		return VERSION_ERROR;
 	}	
 	struct file_transfer sendVersionsTransfer;
@@ -151,27 +151,27 @@ return_code add(char * filename, char * comment, int client_socket) {
 
 
 	if(send_file_transfer(client_socket, &sendVersionsTransfer) != OK){
-		printf("!!!!!!!!!Falla escritura \n");
+		printf("--------------Falla escritura----------- \n");
 		return VERSION_ERROR;
 	}
-	printf("Se envio el fle transfer \n");
+	
 	if(send_file(client_socket, filename, file_size) != 0){
-		printf("!!!!!!!!!Error al mandar el archivo \n");
+		printf("-------------Error al mandar el archivo---------  n");
 		return VERSION_ERROR;
 	}
-	printf("!!!!!!!!!Se envio el sendFIle\n");
+	
 	return_code satusOperation;
 	
 	if(receive_status_code(client_socket, &satusOperation ) != OK ){
-		printf("!!!!!!!!!Error de conexion \n");
+		printf("--------Error de conexion------------  \n");
 		return VERSION_ERROR;
 	}
-	printf("Se recibio el satus code del servidor \n");
+
 	if(satusOperation != VERSION_ADDED){
-		printf("!!!!!!!!!Error al agregar \n");
+		printf("-------------Error al agregar-------- \n");
 		return VERSION_ERROR;
 	}
-	printf("__________Se recibio el satus code del servidor archivo agregado \n");
+	printf("--------Se recibio el satus code del servidor archivo agregado------- \n");
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return VERSION_ADDED;
 }
@@ -186,18 +186,18 @@ void list(char * filename, int socket) {
     versionsSend.nameFile[sizeof(versionsSend.nameFile) - 1] = '\0'; 
 
 	if(send_file_request(socket, &versionsSend )!= OK){
-		printf("Falla escritura \n");
+		printf("--------Falla escritura ------- vc\n");
 
 
 	}
-	printf("Se envio el sendRequest \n");
+	
 	char elementList[SIZE_ELEMENT_LIST];
 	int count = 0;
 	
 	do{
 		status_operation_socket receiveElement = receive_element_list(socket, elementList);	
 		if(receiveElement != OK){
-			printf("ERROR ELEMENT LIST: %d \n",receiveElement);
+			printf("------ERROR ELEMENT LIST: %d  --------\n",receiveElement);
 
 			break;
 		}else if(receiveElement == INVALID_RESPONSE){
@@ -215,7 +215,7 @@ void list(char * filename, int socket) {
 		
 	}while(1);
 	if(count == 0 ){
-		printf("no se encontro versionse a listar \n");
+		printf("------no se encontro versionse a listar ------\n");
 	}
 }
 
@@ -258,7 +258,7 @@ int copy(char * source, char * destination) {
     // Lee del archivo fuente y escribe en el archivo destino
     while ((bytesRead = fread(buffer, 1, sizeof(buffer), src)) > 0) {
         if (fwrite(buffer, 1, bytesRead, dest) != bytesRead) {
-            perror("Error al escribir en el archivo destino");
+            perror("---------Error al escribir en el archivo destino ------------");
             fclose(src);
             fclose(dest);
             return 0;
@@ -284,7 +284,7 @@ int get(char * filename, int version, int socket) {
 	versionsSend.version = version;
 
 	if(send_file_request(socket, (void *)&versionsSend )!= OK){
-		printf("Falla escritura\n");
+		printf("---------Falla escritura---------- \n");
 	}
 
 	struct file_transfer info_file;
@@ -294,11 +294,12 @@ int get(char * filename, int version, int socket) {
 	}
 
 	if(info_file.filseSize == 0){
+		printf("------------- ERRROR el arhcivo no se encuentra en el repositorio-------------\n");
 		return VERSION_NOT_EXISTS;
 	}
 	
 	if(receive_file(socket, filename, info_file.filseSize) != 0){
-		printf("!!!!!!!!!Error al recibir el archivo \n");
+		printf("------Error al recibir el archivo---------- \n");
 		return VERSION_ERROR;
 	}
 
@@ -322,7 +323,7 @@ int retrieve_file(char * hash, char * filename, int socket, int sizeFile) {
 int getFileSize(char * filename){
 	struct stat st;
 	if(stat(filename, &st) != 0){
-		perror("error obtener tamaño del archivo");
+		perror("-------error obtener tamaño del archivo -------");
 		return -1;
 	}
 	return st.st_size;
