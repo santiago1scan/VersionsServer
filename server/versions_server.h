@@ -45,7 +45,7 @@ typedef  struct __attribute__((aligned(512))) {
  * @brief Adiciona un archivo al repositorio.
  * @param socket socket ha comunicar
  * @param idCliente id del cliente
- * @return Codigo de la operacion
+ * @return Resultado de la operacion VERSION_ERROR,VERSION_CREATED,VERSION_ADDED,VERSION_ALREADY_EXISTS,VERSION_NOT_EXISTS,FILE_ADDED. 
  */
 return_code add(int socket, int idCliente);
 
@@ -61,7 +61,7 @@ void list(int socket, int idCliente);
  * Sobreescribe la version existente.
  * @param socket socket ha comunicar
  * @param idCliente id del cliente
- * @return 1 en caso de exito, 0 si ocurre un error.
+ * @return Resultado de la operacion VERSION_ERROR,VERSION_CREATED,VERSION_ADDED,VERSION_ALREADY_EXISTS,VERSION_NOT_EXISTS,FILE_ADDED. 
  */
 return_code get(int socket, int idCLiente);
 

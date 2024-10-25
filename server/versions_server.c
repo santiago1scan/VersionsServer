@@ -17,7 +17,7 @@
  * @param idClient id del cliente
  * @param result Nueva version en memoria
  *
- * @return Resultado de la operacion
+ * @return Resultado de la operacion VERSION_ERROR,VERSION_CREATED,VERSION_ADDED,VERSION_ALREADY_EXISTS,VERSION_NOT_EXISTS,FILE_ADDED.   
  */
 return_code create_version(char * filename, char * hash, int idClient ,file_version * result);
 
@@ -139,7 +139,7 @@ return_code add(int socket, int idCliente) {
 
 	//5.Responder el estado de si se guardon
 	// Si la operacion es exitosa, retorna VERSION_ADDED
-	return_code response = VERSION_ADDED; // Asegúrate de que ALL_OK esté correctamente inicializado
+	return_code response = VERSION_ADDED;
 
 	send_status_code(socket, response);
 	
@@ -271,7 +271,7 @@ return_code get(int socket, int idCliente) {
 	FILE * fp = fopen(".versions/versions.db", "rb");
 
 	if( fp == NULL)
-		return 0;
+		return VERSION_ERROR;
 	
 
 	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
@@ -307,6 +307,8 @@ return_code get(int socket, int idCliente) {
 	send_file_transfer(socket, &file_transfer);
 
 	fclose(fp);
+
+	return VERSION_ADDED;
 
 }
 

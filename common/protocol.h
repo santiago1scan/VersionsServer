@@ -79,7 +79,7 @@ typedef enum {
  * @param socket socket to send the file
  * @param pathFile path of file to send
  * @param sizeFile size of the file to send
- * @return 0 en caso de exito, -1 en caso de fallido
+ * @return OK,ERROR_SOCKET,CLIENT_DISCONECT,INVALID_RESPONSE,ERROR,   
  */
 status_operation_socket send_file(int socket, char * pathFile, int sizeFile);
 
@@ -88,7 +88,7 @@ status_operation_socket send_file(int socket, char * pathFile, int sizeFile);
  * @param socket socket to recieve a file
  * @param pathFile path of file to been resived
  * @param sizeFile size of the file to recieve
- * @return 0 en caso de exito, -1 en caso de fallido
+ * @return OK,ERROR_SOCKET,CLIENT_DISCONECT,INVALID_RESPONSE,ERROR,   
  */
 status_operation_socket receive_file(int socket, char *pathFile, int sizeFile);
 
