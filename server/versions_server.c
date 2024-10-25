@@ -49,9 +49,9 @@ int store_file(char * file, char * hash, int socket, int sizeFile);
 * @param socket socket ha comunicar
 * @param sizeFile tamanio del archivo
 * 
-* @return 1 si la operacion es exitosa, 0 en caso contrario.
+* @return status operation socket.
 */
-int retrieve_file(char * hash, int socket ,int sizeFile);
+status_operation_socket retrieve_file(char * hash, int socket ,int sizeFile);
 
 /**
  * @brief Adiciona una nueva version de un archivo.
@@ -171,7 +171,6 @@ return_code list(int socket, int idCliente) {
 	char message[SIZE_ELEMENT_LIST];
 
 	if( receive_file_request(socket, &file) != OK){
-		printf("Entra linea 174\n");
 		snprintf(message, SIZE_ELEMENT_LIST, "END");
 		send_element_list(socket, message);
 		return VERSION_ERROR;
@@ -184,7 +183,6 @@ return_code list(int socket, int idCliente) {
 	FILE * fp = fopen(".versions/versions.db", "r");
 	file_version  r;
 	if(fp  == NULL ){
-		printf("Entra linea 187\n");
 		snprintf(message, SIZE_ELEMENT_LIST, "END");
 		send_element_list(socket, message);
 		return VERSION_ERROR;
@@ -198,7 +196,6 @@ return_code list(int socket, int idCliente) {
 		if(fread(&r, sizeof(file_version), 1, fp) != 1){
 			break;
 		}
-		printf("Iteracion del archivo %s, con version %d del cliente %d\n", r.filename, cont, r.idCliente);
 		if(strcmp(filename, "") ==0){
 			//Si filename es NULL, muestra todos los registros.
 			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s", cont, r.filename, r.comment, r.hash);
@@ -301,12 +298,14 @@ return_code get(int socket, int idCliente) {
 			}
 			file_transfer.filseSize = st.st_size;
 			
-			if( send_file_transfer(socket, &file_transfer) != OK)
+			if( send_file_transfer(socket, &file_transfer) != OK) //No colocar punto y coma
 				return VERSION_ERROR;
-
-			if(!retrieve_file(r.hash, socket, st.st_size));
+			
+			
+			if( retrieve_file(r.hash, socket, st.st_size) != OK)
 				return VERSION_ERROR;
-			cont++;		
+			cont++;
+			break;		
 		}
 	}
 
@@ -326,7 +325,7 @@ int store_file(char * file, char * hash, int socket, int sizeFile) {
 	return receive_file(socket, dst_filename, sizeFile);
 }
 
-int retrieve_file(char * hash, int socket,int sizeFile) {
+status_operation_socket retrieve_file(char * hash, int socket,int sizeFile) {
 	char src_filename[PATH_MAX];
 	snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
 	return send_file(socket, src_filename, sizeFile);

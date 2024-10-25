@@ -108,10 +108,10 @@ status_operation_socket receive_first_request(int socket, struct first_request *
         totalBytesRead += bytes_read;
     }
 
-    printf("----------- RECEIVE FIRST REQUEST------------- \n");
-    printf("file_idUser:  %d\n", first_request_param->idUser);
-    printf("file_request:  %d \n", first_request_param->request);
-    printf("_________________________________________________ \n");
+    // printf("----------- RECEIVE FIRST REQUEST------------- \n");
+    // printf("file_idUser:  %d\n", first_request_param->idUser);
+    // printf("file_request:  %d \n", first_request_param->request);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesRead, bytes_expected);
 }
@@ -131,12 +131,12 @@ status_operation_socket receive_file_request(int socket, struct file_request *fi
         totalBytesRead += bytes_read;
     }
 
-    printf("______________RECEIVE FILE REQUEST______________ \n");
-    printf("file_hashfile:  %s \n", file_request_param->hashFile);
-    printf("file_nameFile:  %s \n", file_request_param->nameFile);
-    printf("file_sizeHashFile:  %d \n", file_request_param->sizeHashFile);
-    printf("file_sizeNamefile:  %d \n", file_request_param->sizeNameFile);
-    printf("_________________________________________________ \n");
+    // printf("______________RECEIVE FILE REQUEST______________ \n");
+    // printf("file_hashfile:  %s \n", file_request_param->hashFile);
+    // printf("file_nameFile:  %s \n", file_request_param->nameFile);
+    // printf("file_sizeHashFile:  %d \n", file_request_param->sizeHashFile);
+    // printf("file_sizeNamefile:  %d \n", file_request_param->sizeNameFile);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesRead, bytes_expected);
 }
@@ -156,10 +156,10 @@ status_operation_socket receive_file_transfer(int socket, struct file_transfer *
         totalBytesRead += bytes_read;
     }
 
-    printf("______________RECEIVE FILE TRANSFER_______________ \n");
-    printf("file_comment:  %s \n", file_transfer_param->comment);
-    printf("file_fileSize:  %d \n", file_transfer_param->filseSize);
-    printf("_________________________________________________ \n");
+    // printf("______________RECEIVE FILE TRANSFER_______________ \n");
+    // printf("file_comment:  %s \n", file_transfer_param->comment);
+    // printf("file_fileSize:  %d \n", file_transfer_param->filseSize);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesRead, bytes_expected);
 }
@@ -179,9 +179,9 @@ status_operation_socket receive_status_code(int socket, return_code *status_oper
         totalBytesRead += bytes_read;
     }
 
-    printf("-----------RECEIVE STATUS OPERATION------------- \n");
-    printf("status Operation:  %d \n", *status_operation);
-    printf("_________________________________________________ \n");
+    // printf("-----------RECEIVE STATUS OPERATION------------- \n");
+    // printf("status Operation:  %d \n", *status_operation);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesRead, bytes_expected);
 }
@@ -202,12 +202,12 @@ status_operation_socket receive_element_list(int socket, char elementList[SIZE_E
         totalBytesRead += bytes_read;
     }
 
-    printf("Received element list: %s\n", elementList);
-    printf("tamaño string recibido %zu\n", strlen(elementList));
-    printf("____________RECEIVE ELEMENT LIST______________ \n");
-    printf("Element List: %s\n", elementList);
-    printf("TAMAÑO ELEMENLIST : ------------------------------  %zu  \n", strlen(elementList));
-    printf("_________________________________________________ \n");
+    // printf("Received element list: %s\n", elementList);
+    // printf("tamaño string recibido %zu\n", strlen(elementList));
+    // printf("____________RECEIVE ELEMENT LIST______________ \n");
+    // printf("Element List: %s\n", elementList);
+    // printf("TAMAÑO ELEMENLIST : ------------------------------  %zu  \n", strlen(elementList));
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesRead, size_struct);
 }
@@ -225,10 +225,10 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
         totalBytesWritten += bytes_written;
     }
 
-    printf("_____________SEND FIRST REQUEST_______________\n");
-    printf("Element idUser: %d\n", first_request_param->idUser);
-    printf("Element request: %d\n", first_request_param->request);
-    printf("_________________________________________________ \n");
+    // printf("_____________SEND FIRST REQUEST_______________\n");
+    // printf("Element idUser: %d\n", first_request_param->idUser);
+    // printf("Element request: %d\n", first_request_param->request);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesWritten, size_struct);
 }
@@ -248,13 +248,13 @@ status_operation_socket send_file_request(int socket, struct file_request *file_
         totalBytesWritten += bytes_written;
     }
 
-    printf("_____________SEND FILE REQUEST _______________\n");
-    printf("Element hashFile: %s\n", file_request_param->hashFile);
-    printf("Element nameFile: %s\n", file_request_param->nameFile);
-    printf("Element hashFile: %d\n", file_request_param->sizeHashFile);
-    printf("Element sizeNemaFIle: %d\n", file_request_param->sizeNameFile);
-    printf("Element version: %d\n", file_request_param->version);
-    printf("_________________________________________________ \n");
+    // printf("_____________SEND FILE REQUEST _______________\n");
+    // printf("Element hashFile: %s\n", file_request_param->hashFile);
+    // printf("Element nameFile: %s\n", file_request_param->nameFile);
+    // printf("Element hashFile: %d\n", file_request_param->sizeHashFile);
+    // printf("Element sizeNemaFIle: %d\n", file_request_param->sizeNameFile);
+    // printf("Element version: %d\n", file_request_param->version);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesWritten, size_struct);
 }
@@ -272,16 +272,16 @@ status_operation_socket send_file_transfer(int socket, struct file_transfer *fil
         totalBytesWritten += bytes_written;
     }
 
-    printf("_____________SEND FILE TRANSFER _______________\n");
-    printf("Element comment: %s\n", file_transfer_param->comment);
-    printf("Element fileSize: %d\n", file_transfer_param->filseSize);
-    printf("_________________________________________________ \n");
+    // printf("_____________SEND FILE TRANSFER _______________\n");
+    // printf("Element comment: %s\n", file_transfer_param->comment);
+    // printf("Element fileSize: %d\n", file_transfer_param->filseSize);
+    // printf("_________________________________________________ \n");
 
     return validate_message(totalBytesWritten, size_struct);
 }
 
 status_operation_socket send_status_code(int socket, return_code code) {
-    printf("send_status_code(%d)\n", code);
+    // printf("send_status_code(%d)\n", code);
     size_t size_struct = sizeof(return_code);
     ssize_t totalBytesWritten = 0;
 
@@ -298,8 +298,8 @@ status_operation_socket send_status_code(int socket, return_code code) {
 }
 
 status_operation_socket send_element_list(int socket, char elementList[SIZE_ELEMENT_LIST]) {
-    printf("send_element_list(%s)\n", elementList);
-    printf("tamaño string enviado %zu\n", strlen(elementList));
+    // printf("send_element_list(%s)\n", elementList);
+    // printf("tamaño string enviado %zu\n", strlen(elementList));
 
     size_t size_struct = SIZE_ELEMENT_LIST;
     ssize_t totalBytesWritten = 0;
