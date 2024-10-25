@@ -196,7 +196,7 @@ return_code list(int socket, int idCliente) {
 		if(fread(&r, sizeof(file_version), 1, fp) != 1){
 			break;
 		}
-		if(strcmp(filename, "") ==0){
+		if(strcmp(filename, "") ==0 && r.idCliente == idCliente){
 			//Si filename es NULL, muestra todos los registros.
 			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s", cont, r.filename, r.comment, r.hash);
 			if( send_element_list(socket, message) != OK)
@@ -305,17 +305,17 @@ return_code get(int socket, int idCliente) {
 			if( retrieve_file(r.hash, socket, st.st_size) != OK)
 				return VERSION_ERROR;
 			cont++;
-			break;		
+
+			return VERSION_ADDED;	
 		}
 	}
-
 	file_transfer.filseSize = 0;
 	
 	send_file_transfer(socket, &file_transfer);
 
 	fclose(fp);
 
-	return VERSION_ADDED;
+	return VERSION_NOT_EXISTS;
 
 }
 
