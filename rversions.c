@@ -178,17 +178,17 @@ status_operation_socket actionGet(char * argument2, char * argument3, int idClie
 	struct first_request peticion;
 	peticion.request = peticionRequest;
 	peticion.idUser = idClient;
+	int version = atoi(argument2);
+	if(version == 0){
+		printf("Escriba una version numerica \n");
+		return ERROR;
+	}
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
 		printf("Error \n");
 		return ERROR;
 	}
-	int version = atoi(argument3);
-	if(version == 0){
-		printf("Escriba una version numerica \n");
-		return ERROR;
-	}
-	if(get(argument2, version, client_socket)== 0){
+	if(get(argument3, version, client_socket)== 0){
 		printf("Error in get \n");
 		return ERROR;
 	}	

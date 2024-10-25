@@ -151,13 +151,13 @@ status_operation_socket receive_element_list(int socket, char elementList[SIZE_E
         totalBytesRead += bytes_read;
     }
 
-    printf("Received element list: %s\n", elementList);
-    printf("tamaño string recibido %zu\n", strlen(elementList));
+    // printf("Received element list: %s\n", elementList);
+    // printf("tamaño string recibido %zu\n", strlen(elementList));
   
-    printf("____________RECEIVE ELEMENT LIST______________ \n");
-    printf("Element List: %s\n", elementList);
-    printf("TAMAÑO ELEMENLIST : ------------------------------  %d  \n", strlen(elementList));
-    printf("_________________________________________________ \n");
+    // printf("____________RECEIVE ELEMENT LIST______________ \n");
+    // printf("Element List: %s\n", elementList);
+    // printf("TAMAÑO ELEMENLIST : ------------------------------  %d  \n", strlen(elementList));
+    // printf("_________________________________________________ \n");
     return OK;
 }
 

@@ -114,7 +114,7 @@ return_code add(char * filename, char * comment, int client_socket) {
 	create_version(filename, comment, &v);
 	strncpy(versionsSend.hashFile, v.hash, sizeof(versionsSend.hashFile) - 1);
     versionsSend.hashFile[sizeof(versionsSend.hashFile) - 1] = '\0'; 
-
+	printf("HASH========== %s",v.hash);
 
 
 	if(send_file_request(client_socket, &versionsSend )!= OK){
