@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 	
-	//system("clear");
+	system("clear");
     printf("Conectado al servidor %s en el puerto %d\n", server_ip, server_port);
 
 	//Cargamos o generamos el id del cliente
@@ -156,7 +156,7 @@ status_operation_socket actionAdd(char * argument2, char * argument3, int idClie
 		printf("Error General  rversions\n");
 		return ERROR;
 	}
-	if(add(argument2, argument3, client_socket) != FILE_ADDED){
+	if(add(argument2, argument3, client_socket)!= VERSION_ADDED){
 		printf("Error in add rversions\n");
 		return ERROR;
 	}	

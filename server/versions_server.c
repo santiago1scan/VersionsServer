@@ -104,7 +104,7 @@ return_code add(int socket, int idCliente) {
 	
 	//2.Validar si existe, y dar respuesta
 
-	size_t existVersion = version_exists(info_file.hashFile, idCliente,v.hash);
+	size_t existVersion = version_exists(info_file.nameFile, idCliente, v.hash);
 
 	//2.1 Notificamos al usuario
 
@@ -164,13 +164,13 @@ int add_new_version(file_version * v) {
 	return 1;
 }
 
-void list(int socket, int idCliente) {
+return_code list(int socket, int idCliente) {
 	//1. Resibimos la informacion del archivo
 	
 	struct file_request file;
 
 	if( receive_file_request(socket, &file) != OK)
-		return;
+		return VERSION_ERROR;
 
 	char filename[file.sizeNameFile +1];
 	strncpy(filename, file.nameFile, file.sizeNameFile);
@@ -180,7 +180,7 @@ void list(int socket, int idCliente) {
 	FILE * fp = fopen(".versions/versions.db", "r");
 	file_version  r;
 	if(fp  == NULL ){
-		return;
+		return VERSION_ERROR;
 	}
 
 	//Leer hasta el fin del archivo 
@@ -214,6 +214,7 @@ void list(int socket, int idCliente) {
 	send_element_list(socket, message);
 
 	fclose(fp);
+	return VERSION_ADDED;
 }
 
 int version_exists(char * filename, int idClient,char * hash) {
@@ -246,6 +247,7 @@ int version_exists(char * filename, int idClient,char * hash) {
 	for(int i = 0; i < countVersions; i++)
 		if(strcmp(versions[i].filename, filename) == 0 && strcmp(versions[i].hash, hash) == 0 && versions[i].idCliente == idClient)
 			return 1;
+			
 	// Verifica si en la bd existe un registro que coincide con filename y hash
 	return 0;
 }

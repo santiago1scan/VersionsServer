@@ -53,8 +53,9 @@ return_code add(int socket, int idCliente);
  * @brief Lista las versiones de un archivo.
  * @param socket socket ha comunicar
  * @param idCliente id del cliente
+ * @return Resultado de la operacion VERSION_ERROR,VERSION_CREATED,VERSION_ADDED,VERSION_ALREADY_EXISTS,VERSION_NOT_EXISTS,FILE_ADDED. 
  */
-void list(int socket, int idCliente);
+return_code list(int socket, int idCliente);
 
 /**
  * @brief Obtiene una version del un archivo.
