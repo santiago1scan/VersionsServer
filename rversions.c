@@ -126,6 +126,7 @@ int main(int argc, char *argv[]) {
 					handle_terminate(0);
 				}
 				printf("Error en actionAdd rversions\n");
+				
 				continue;
 			}
 		} else if (sscanf(line, "list %s", argument2) == 1) {
@@ -133,7 +134,7 @@ int main(int argc, char *argv[]) {
 				printf("Error en actionList rversions\n");
 				continue;
 			}
-			printf("AQUI TERMINA_______________________ \n");
+			printf("_______________________ \n");
 		} else if (sscanf(line, "get %s %s", argument2, argument3) == 2) {
 			if (actionGet(argument2, argument3, idClient, client_socket) != OK) {
 				printf("Error en actionGet rversions\n");
@@ -144,12 +145,13 @@ int main(int argc, char *argv[]) {
 				printf("Error en actionList rversions\n");
 				continue;
 			}
-			printf("AQUI TERMINA_______________________ \n");
+			printf("_______________________ \n");
+
 		} else {
 			printf("Comando no reconocido: %s\n", line);
 		}
 	}
-	printf("SI PARA \n");
+
 	exit(EXIT_SUCCESS);
 
 }
@@ -206,12 +208,7 @@ status_operation_socket actionList(char * argument2, int idClient, int client_so
 		printf("Error");
 		return ERROR;
 	}
-	/**
-	 * if(list(argument2)== NULL){
-		printf("Error in get");
-		return ERROR;
-	}
-	 */
+
 	list(argument2, client_socket);	
 	return restult_first_request;
 }
