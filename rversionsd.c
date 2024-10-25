@@ -260,7 +260,6 @@ void delete_user(int socket){
 	pthread_mutex_unlock(&mutexServer);
 }
 
-
 void handle_add(int socket, int idUser){
 	printf(" -- El usuario %d ha solicitado un add --\n", idUser);
 
@@ -285,7 +284,7 @@ void handle_get(int socket, int idUser){
 	switch (get(socket, idUser))
 	{
 	case VERSION_ADDED:
-		printf("> The versions has been listed for the user %d\n", idUser);
+		printf("> The versions has been geted for the user %d\n", idUser);
 		break;
 	case VERSION_ERROR:
 		printf("> Error listing the versions of the user %d\n", idUser);
