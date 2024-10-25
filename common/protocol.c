@@ -140,8 +140,9 @@ status_operation_socket receive_element_list(int socket, char elementList[SIZE_E
     ssize_t bytes_read = read(socket, (void*)elementList, bytes_expected);    
     printf("____________RECEIVE ELEMENT LIST______________ \n");
     printf("Element List: %s\n", elementList);
+    printf("TAMAÑO ELEMENLIST : ------------------------------  %d  \n", strlen(elementList));
     printf("_________________________________________________ \n");
-    return validate_message(bytes_read, bytes_expected);
+    return validate_message(bytes_read, bytes_read);
 }
 
 status_operation_socket send_first_request(int socket, struct first_request *first_request_param) {
@@ -156,7 +157,7 @@ status_operation_socket send_first_request(int socket, struct first_request *fir
     }
     printf("_____________SEND FIRST REQUEST_______________\n");
     printf("Element idUser: %d\n", first_request_param->idUser);
-    printf("Element idUser: %d\n", first_request_param->request);
+    printf("Element request: %d\n", first_request_param->request);
     printf("_________________________________________________ \n");
     
     return OK;
@@ -180,7 +181,7 @@ status_operation_socket send_file_request(int socket, struct file_request *file_
     printf("Element nameFile: %s\n", file_request_param->nameFile);
     printf("Element hashFile: %d\n", file_request_param->sizeHashFile);
     printf("Element sizeNemaFIle: %d\n", file_request_param->sizeNameFile);
-    printf("Element sizeNemaFIle: %d\n", file_request_param->version);
+    printf("Element version: %d\n", file_request_param->version);
 
     printf("_________________________________________________ \n"   );
     
@@ -197,9 +198,11 @@ status_operation_socket send_file_transfer(int socket, struct file_transfer *fil
         }
         totalBytesWritten += bytes_written;
     }
-  
+    printf("_____________SEND FILE TRANSFER _______________\n");
+    printf("Element comment: %s\n", file_transfer_param->comment);
+    printf("Element fileSize: %d\n", file_transfer_param->filseSize);
     printf("_________________________________________________ \n"   );
-    printf("Sent file transfer: fileSize=%d, comment=%s\n", file_transfer_param->filseSize, file_transfer_param->comment);
+
     return OK;
 }
 

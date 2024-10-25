@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 	signal(SIGTERM, handle_terminate);
 	char cadena[PATH_MAX];
     char *token;
-	char order[PATH_MAX], argument2[PATH_MAX], argument3[PATH_MAX];
+	
  
 	// Validar argumentos de linea de comandos
 	if(argc != 3){
@@ -107,12 +107,19 @@ int main(int argc, char *argv[]) {
 
 	//Cargamos o generamos el id del cliente
 	int idClient = setup_idClient();
+	int LINESIZE = 512;
+    char line[LINESIZE], argument2[PATH_MAX], argument3[PATH_MAX];
+    size_t version;
+    return_code result;
 	while(1){
 		type_request peticionRequest;
-		printf("NO para \n");
-		scanf("%s %s %s", order, argument2, argument3);
+		printf("Ingrese la orden \n");
 		
-		if(EQUALS(order, "add")){
+		fgets(line, LINESIZE, stdin);
+        line[strlen(line) - 1] = '\0';
+		
+		if(sscanf(line, "add %s \"%[^\"]\"",argument2, argument3) == 2)
+		{
 			status_operation_socket messageActionAdd =  actionAdd(argument2, argument3, idClient, client_socket);
 			if( messageActionAdd != OK ){
 				if(messageActionAdd == CLIENT_DISCONECT){
@@ -125,17 +132,23 @@ int main(int argc, char *argv[]) {
 			}
 			
 		}
-		if(EQUALS(order, "list")){
+		if (sscanf(line, "list %s", argument2) == 1)
+		{
 			if(actionList(argument2, idClient, client_socket) != OK){
 				printf("Error actionLInsr rversions\n");
 				continue;
 			}
+			printf("AQUI TERMINA_______________________ \n");
 		}
-		if(EQUALS(order, "get")){
+		if(sscanf(line, "get %s %s", argument2, argument3) == 2)
+		{
 			if(actionGet(argument2, argument3, idClient, client_socket) != OK){
 				printf("Error in actionGet rversions\n");
 				continue;
 			}
+		}
+		if (sscanf(line, "list") == 0){
+			printf("listar: ");
 		}
 		
 		

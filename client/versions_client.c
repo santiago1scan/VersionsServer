@@ -193,17 +193,24 @@ void list(char * filename, int socket) {
 	printf("Se envio el sendRequest \n");
 	char elementList[SIZE_ELEMENT_LIST];
 	int count = 0;
+	
 	do{
+		
 		if(receive_element_list(socket, elementList)!= OK){
+			
 			printf("!!!!!ERROR al recibir element dentro del whilelist\n");
-				
+			
+		}else{
+			if(strcmp(elementList, "END")== 0){
+				break;
+			}
 		}
-		else{
-			count= count +1;
-			printf("%s \n",elementList);
-		}	
-	}while(strcmp(elementList, " ") != 0);
-	if(count == 1 ){
+
+		count= count +1;
+		printf("%s \n",elementList);
+
+	}while(1);
+	if(count == 0 ){
 		printf("no se encontro versionse a listar");
 	}
 }
