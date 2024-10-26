@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Implementacion del API de gestion de versiones
+ * @brief Implementacion del API de gestion de versiones para el lado del servidor
  * @author Erwin Meza Vega <emezav@unicauca.edu.co>
  * @author Miguel Angel Calambas Vivas <mangelcvivas@unicauca.edu.co>
  * @author Esteban Santiago Escandon Causaya <estebanescandon@unicauca.edu.co>
@@ -11,12 +11,11 @@
 
 /**
  * @brief Crea una version en memoria del archivo
- * Valida si el archivo especificado existe y crea su hash
+ * 
  * @param filename Nombre del archivo
  * @param hash hash of the file\
  * @param idClient id del cliente
  * @param result Nueva version en memoria
- *
  * @return Resultado de la operacion VERSION_ERROR,VERSION_CREATED,VERSION_ADDED,VERSION_ALREADY_EXISTS,VERSION_NOT_EXISTS,FILE_ADDED.   
  */
 return_code create_version(char * filename, char * hash, int idClient ,file_version * result);
@@ -32,29 +31,29 @@ return_code create_version(char * filename, char * hash, int idClient ,file_vers
 int version_exists(char * filename, int clientId,char * hash);
 
 /**
-* @brief Almacena un archivo en el repositorio
+* @brief Almacena un archivo en el repositorio con el hash como nombre
 *
 * @param file info del archivo a guardar
 * @param hash Hash del archivo: nombre del archivo en el repositorio
 * @param socket socket ha comunicar
 * @param sizeFile tamanio del archivo
-* @return 1 si la operacion es exitosa, 0 en caso contrario.
+* @return OK,ERROR_SOCKET,CLIENT_DISCONECT,INVALID_RESPONSE,ERROR,   
 */
-int store_file(char * file, char * hash, int socket, int sizeFile);
+status_operation_socket store_file(char * file, char * hash, int socket, int sizeFile);
 
 /**
-* @brief Almacena un archivo en el repositorio
+* @brief Envia un archivo almacenado en el repositorio
 *
 * @param hash Hash del archivo: nombre del archivo en el repositorio
 * @param socket socket ha comunicar
 * @param sizeFile tamanio del archivo
 * 
-* @return status operation socket.
+* @return OK,ERROR_SOCKET,CLIENT_DISCONECT,INVALID_RESPONSE,ERROR,   
 */
 status_operation_socket retrieve_file(char * hash, int socket ,int sizeFile);
 
 /**
- * @brief Adiciona una nueva version de un archivo.
+ * @brief Adiciona una nueva version de un archivo en el .db.
  *
  * @param filename Nombre del archivo.
  * @param comment Comentario de la version.
@@ -66,14 +65,8 @@ int add_new_version(file_version * v);
 
 
 return_code create_version(char * filename, char * hash, int idClient,file_version * result) {
-	file_version v;
+	//Estructuras necesarias
 	struct stat statbuff;
-	// Verifica si el archivo existe y es regular
-	if(stat(filename, &statbuff) < 0)
-		return VERSION_ERROR;
-
-	if( !S_ISREG(statbuff.st_mode) )
-		return VERSION_ERROR;
 
 	// Llena la estructura result con los datos del archivo
     strncpy(result->filename, filename, sizeof(result->filename) - 1);
@@ -149,24 +142,28 @@ return_code add(int socket, int idCliente) {
 int add_new_version(file_version * v) {
 	// Abre el archivo versions.db en modo append 
 	//y verificamos que se haya abierto correctamente
+	pthread_mutex_lock(&mutexDB);
 	FILE * fp;
 	fp = fopen(".versions/versions.db", "ab");
 	
-	if(fp == NULL)
+	if(fp == NULL){
+		pthread_mutex_unlock(&mutexDB);
 		return 0;
+	}
 	// Escribe la estructura v en el archivo, verifica que se haya escrito correctamente
 	// y cierra el archivo 
 	if( fwrite(v, sizeof(file_version), 1, fp) != 1){
 		fclose(fp);
+		pthread_mutex_unlock(&mutexDB);
 		return 0;
 	}
 	fclose(fp);
+	pthread_mutex_unlock(&mutexDB);
 	return 1;
 }
 
 return_code list(int socket, int idCliente) {
 	//1. Resibimos la informacion del archivo
-	
 	struct file_request file;
 	char message[SIZE_ELEMENT_LIST];
 
@@ -179,10 +176,14 @@ return_code list(int socket, int idCliente) {
 	strncpy(filename, file.nameFile, file.sizeNameFile);
 	filename[file.sizeNameFile] = '\0'; // Asegurarse de que la cadena esté terminada en nulo
 	
-	//Abre el la base de datos de versiones (versions.db)
+	//2. Responder con la lista de versiones hasta un END
+	//   si no hay simplemente manda el END
+	//	Abre el la base de datos de versiones (versions.db) de manera segura
+	pthread_mutex_lock(&mutexDB);
 	FILE * fp = fopen(".versions/versions.db", "r");
 	file_version  r;
 	if(fp  == NULL ){
+		pthread_mutex_unlock(&mutexDB);
 		snprintf(message, SIZE_ELEMENT_LIST, "END");
 		send_element_list(socket, message);
 		return VERSION_ERROR;
@@ -200,14 +201,14 @@ return_code list(int socket, int idCliente) {
 			//Si filename es NULL, muestra todos los registros.
 			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s", cont, r.filename, r.comment, r.hash);
 			if( send_element_list(socket, message) != OK)
-			break;
-			cont = cont + 1;
+				break;
+			cont ++;
 		
 		}else if(EQUALS(r.filename,filename) && r.idCliente == idCliente){
 			snprintf(message, SIZE_ELEMENT_LIST, "%d %s %s  %.5s", cont, r.filename, r.comment, r.hash);
 			if( send_element_list(socket, message) != OK)
-			break;
-			cont = cont + 1;
+				break;
+			cont++;
 		}
 		//Si el registro corresponde al archivo buscado, imprimir
 		//Muestra los registros cuyo nombre coincide con filename.
@@ -215,13 +216,14 @@ return_code list(int socket, int idCliente) {
 
 	snprintf(message, SIZE_ELEMENT_LIST, "END");
 	send_element_list(socket, message);
-
 	fclose(fp);
+	pthread_mutex_unlock(&mutexDB);
 	return VERSION_ADDED;
 }
 
 int version_exists(char * filename, int idClient,char * hash) {
 	//abre la base de datos de versiones .versions/versions.db
+	pthread_mutex_lock(&mutexDB);
 	FILE * fp = fopen(".versions/versions.db", "rb");
 
 	if( fp == NULL)
@@ -241,12 +243,14 @@ int version_exists(char * filename, int idClient,char * hash) {
 	
 	if(versions == NULL){
 		fclose(fp);
+		pthread_mutex_unlock(&mutexDB);
 		return 0;
 	}
 
 	// Lee los registros de la base de datos
 	fread(versions, sizeof(file_version), countVersions, fp);
 	fclose(fp);
+	pthread_mutex_unlock(&mutexDB);
 	for(int i = 0; i < countVersions; i++)
 		if(strcmp(versions[i].filename, filename) == 0 && strcmp(versions[i].hash, hash) == 0 && versions[i].idCliente == idClient)
 			return 1;
@@ -272,11 +276,14 @@ return_code get(int socket, int idCliente) {
 
 	//abre la base de datos de versiones .versions/versions.db
 	//y validamos que se haya abierto correctamente
+	pthread_mutex_lock(&mutexDB);
 	file_version r;
 	FILE * fp = fopen(".versions/versions.db", "rb");
 
-	if( fp == NULL)
+	if( fp == NULL){
+		pthread_mutex_unlock(&mutexDB);
 		return VERSION_ERROR;
+	}
 	
 
 	//Leer hasta el fin del archivo verificando si el registro coincide con filename y version
@@ -294,32 +301,35 @@ return_code get(int socket, int idCliente) {
 
 			struct stat st;
 			if (stat(r.filename, &st) != 0) {
+				pthread_mutex_unlock(&mutexDB);
 				return VERSION_ERROR;
 			}
 			file_transfer.filseSize = st.st_size;
 			
-			if( send_file_transfer(socket, &file_transfer) != OK) //No colocar punto y coma
+			if( send_file_transfer(socket, &file_transfer) != OK){
+				pthread_mutex_unlock(&mutexDB);
 				return VERSION_ERROR;
+			}			
 			
-			
-			if( retrieve_file(r.hash, socket, st.st_size) != OK)
+			if( retrieve_file(r.hash, socket, st.st_size) != OK){
+				pthread_mutex_unlock(&mutexDB);
 				return VERSION_ERROR;
-			cont++;
+			}
 
+			fclose(fp);
+			pthread_mutex_unlock(&mutexDB);
 			return VERSION_ADDED;	
 		}
 	}
 	file_transfer.filseSize = 0;
-	
 	send_file_transfer(socket, &file_transfer);
-
 	fclose(fp);
-
+	pthread_mutex_unlock(&mutexDB);
 	return VERSION_NOT_EXISTS;
 
 }
 
-int store_file(char * file, char * hash, int socket, int sizeFile) {
+status_operation_socket store_file(char * file, char * hash, int socket, int sizeFile) {
 	char dst_filename[PATH_MAX];
 	snprintf(dst_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
 	return receive_file(socket, dst_filename, sizeFile);

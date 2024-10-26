@@ -2,6 +2,8 @@
  * @file
  * @brief API de gestion de versiones
  * @author Erwin Meza Vega <emezav@unicauca.edu.co>
+ * @author Miguel Angel Calambas Vivas <mangelcvivas@unicauca.edu.co>
+ * @auhtor Santiago Escandon
  * @copyright MIT License
 */
 
@@ -17,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #include "../common/sha256.h"
 #include "../common/protocol.h"
@@ -35,11 +38,13 @@
  * repositorio.
  */
 typedef  struct __attribute__((aligned(512))) {
-	char filename[PATH_MAX]; /**< Nombre del archivo original. */
-	char hash[HASH_SIZE];           /**< Hash del contenido del archivo. */
-	char comment[COMMENT_SIZE];	   /**< Comentario del usuario. */
-	int idCliente; /**< id del cliente que subio la version */
+	char filename[PATH_MAX]; 	/**< Nombre del archivo original. */
+	char hash[HASH_SIZE];       /**< Hash del contenido del archivo. */
+	char comment[COMMENT_SIZE];	/**< Comentario del usuario. */
+	int  idCliente; 			/**< id del cliente que subio la version */
 }file_version;
+
+extern pthread_mutex_t mutexDB; /**< Mutex para proteger el acceso a la base de datos. */
 
 /**
  * @brief Adiciona un archivo al repositorio.

@@ -16,6 +16,7 @@
 #include <netinet/ip.h>
 #include <signal.h>
 #include <pthread.h>
+#include <linux/stat.h>
 
 #include "./client/versions_client.h"
 
@@ -275,10 +276,11 @@ int setup_idClient() {
 
 return_code validate_exist(char * filename){
 	struct stat s;
-	if(stat(filename, &s) != 0){
-		
+	if(stat(filename, &s) < 0)
 		return VERSION_ERROR;
-	}
+
+	if( !S_ISREG(s.st_mode) )
+		return VERSION_ERROR;
 	return VERSION_ALREADY_EXISTS;
 
 	

@@ -82,10 +82,10 @@ struct Server{
 	int *socketsUsers;
 };
 
-struct Server *myServer = NULL; /* Global variable to manage multiples users*/
-int serverSocket; /* Server socket*/
-pthread_mutex_t mutexServer; /* Mutex for sync myServer variable*/
-
+struct Server *myServer = NULL;  /* Global variable to manage multiples users*/
+int serverSocket;				 /* Server socket*/
+pthread_mutex_t mutexServer; 	/* Mutex for sync myServer variable*/
+pthread_mutex_t mutexDB;		/**< Mutex para proteger el acceso a la base de datos. */
 int main(int argc, char *argv[]) {
 	//Config the handlers of signals
     signal(SIGINT, handle_terminate);
@@ -125,6 +125,7 @@ int main(int argc, char *argv[]) {
 
 	//Initializate the mutex
 	pthread_mutex_init(&mutexServer,NULL);
+	pthread_mutex_init(&mutexDB,NULL);
 
 	//Obtain the server socket
 	serverSocket = socket(AF_INET, SOCK_STREAM,0);
@@ -164,7 +165,6 @@ void handle_terminate(int sig){
 	
 	//Liberamos memoria de myServer de manera segura
 	pthread_mutex_lock(&mutexServer);
-	
 	size_t j = 0;
 	for(int i = 0; j<myServer->countUsers;i++){
 		if(myServer->socketsUsers[i]>0){
@@ -177,7 +177,7 @@ void handle_terminate(int sig){
 	free(myServer);
 	pthread_mutex_unlock(&mutexServer);
 	pthread_mutex_destroy(&mutexServer);
-	
+	pthread_mutex_destroy(&mutexDB);
 	exit(EXIT_SUCCESS);
 }
 
