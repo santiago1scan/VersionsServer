@@ -332,12 +332,12 @@ return_code get(int socket, int idCliente) {
 status_operation_socket store_file(char * file, char * hash, int socket, int sizeFile) {
 	char dst_filename[PATH_MAX];
 	snprintf(dst_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return receive_file(socket, dst_filename, sizeFile);
+	return receive_file(socket, dst_filename);
 }
 
 status_operation_socket retrieve_file(char * hash, int socket,int sizeFile) {
 	char src_filename[PATH_MAX];
 	snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return send_file(socket, src_filename, sizeFile);
+	return send_file(socket, src_filename);
 }
 

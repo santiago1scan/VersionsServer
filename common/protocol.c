@@ -16,20 +16,34 @@
  */
 status_operation_socket validate_message(int bytes_int, int bytes_expected);
 
-status_operation_socket send_file(int socket, char *pathFile, int sizeFile) {
-    // 1. Open the file
+status_operation_socket send_file(int socket, const char *pathFile) {
+    // 1. Abrir el archivo en modo solo lectura
     int file = open(pathFile, O_RDONLY);
     if (file < 0) {
         perror("Error opening file");
         return ERROR;
     }
 
-    // 2. Get the file size
-    off_t fileSize = sizeFile;
+    // 2. Obtener el tamaño del archivo
+    off_t fileSize = lseek(file, 0, SEEK_END);
+    lseek(file, 0, SEEK_SET);  // Regresar al inicio del archivo
+    if (fileSize < 0) {
+        perror("Error obtaining file size");
+        close(file);
+        return ERROR;
+    }
 
-    // 4. Read the file and send its contents
+    // 3. Enviar el tamaño del archivo
+    if (write(socket, &fileSize, sizeof(fileSize)) < 0) {
+        perror("Error sending file size");
+        close(file);
+        return ERROR;
+    }
+
+    // 4. Leer el archivo y enviar su contenido
     char buffer[BUFFER_SIZE];
     ssize_t bytesRead;
+    off_t totalBytesSent = 0;
     while ((bytesRead = read(file, buffer, sizeof(buffer))) > 0) {
         ssize_t totalBytesWritten = 0;
         while (totalBytesWritten < bytesRead) {
@@ -41,6 +55,7 @@ status_operation_socket send_file(int socket, char *pathFile, int sizeFile) {
             }
             totalBytesWritten += bytesWritten;
         }
+        totalBytesSent += bytesRead;
     }
 
     if (bytesRead < 0) {
@@ -49,23 +64,28 @@ status_operation_socket send_file(int socket, char *pathFile, int sizeFile) {
         return ERROR;
     }
 
-    // 5. Close the file
+    // 5. Cerrar el archivo
     close(file);
     return OK;
 }
 
-status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
-    // 1. Open the file
+status_operation_socket receive_file(int socket, const char *pathFile) {
+    // 1. Abrir el archivo en modo escritura, creando uno nuevo o truncando el existente
     int file = open(pathFile, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (file < 0) {
         perror("Error opening file");
         return ERROR;
     }
 
-    // 2. Receive the file size
-    off_t fileSize = sizeFile;
+    // 2. Recibir el tamaño del archivo
+    off_t fileSize;
+    if (read(socket, &fileSize, sizeof(fileSize)) <= 0) {
+        perror("Error receiving file size");
+        close(file);
+        return ERROR;
+    }
 
-    // 3. Receive the file and write its contents
+    // 3. Recibir y escribir los datos del archivo
     char buffer[BUFFER_SIZE];
     ssize_t bytesReceived;
     off_t totalBytesReceived = 0;
@@ -82,13 +102,14 @@ status_operation_socket receive_file(int socket, char *pathFile, int sizeFile) {
         }
         totalBytesReceived += bytesReceived;
     }
+
     if (bytesReceived < 0) {
         perror("Error reading from socket");
         close(file);
         return ERROR;
     }
 
-    // 4. Close the file
+    // 4. Cerrar el archivo
     close(file);
     return OK;
 }

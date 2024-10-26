@@ -155,7 +155,7 @@ return_code add(char * filename, char * comment, int client_socket) {
 		return VERSION_ERROR;
 	}
 	
-	if(send_file(client_socket, filename, file_size) != 0){
+	if(send_file(client_socket, filename) != 0){
 		printf("-------------Error al mandar el archivo---------  n");
 		return VERSION_ERROR;
 	}
@@ -298,7 +298,7 @@ int get(char * filename, int version, int socket) {
 		return VERSION_NOT_EXISTS;
 	}
 	
-	if(receive_file(socket, filename, info_file.filseSize) != 0){
+	if(receive_file(socket, filename) != 0){
 		printf("------Error al recibir el archivo---------- \n");
 		return VERSION_ERROR;
 	}
@@ -310,13 +310,13 @@ int get(char * filename, int version, int socket) {
 int store_file(char * filename, char * hash, int socket, int sizeFile) {
 	char dst_filename[PATH_MAX];
 	snprintf(dst_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return receive_file(socket, dst_filename, sizeFile);
+	return receive_file(socket, dst_filename);
 }
 
 int retrieve_file(char * hash, char * filename, int socket, int sizeFile) {
 	char src_filename[PATH_MAX];
 	snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, hash);
-	return send_file(socket, src_filename, sizeFile);
+	return send_file(socket, src_filename);
 }
 
 

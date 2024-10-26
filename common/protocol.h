@@ -81,7 +81,7 @@ typedef enum {
  * @param sizeFile size of the file to send
  * @return OK,ERROR_SOCKET,CLIENT_DISCONECT,INVALID_RESPONSE,ERROR,   
  */
-status_operation_socket send_file(int socket, char * pathFile, int sizeFile);
+status_operation_socket send_file(int socket,const  char * pathFile);
 
 /**
  * @brief Start the protocol for recive a file
@@ -90,7 +90,7 @@ status_operation_socket send_file(int socket, char * pathFile, int sizeFile);
  * @param sizeFile size of the file to recieve
  * @return OK,ERROR_SOCKET,CLIENT_DISCONECT,INVALID_RESPONSE,ERROR,   
  */
-status_operation_socket receive_file(int socket, char *pathFile, int sizeFile);
+status_operation_socket receive_file(int socket,const  char *pathFile);
 
 /**
  * @brief Receive the structure first_request whit a code of status

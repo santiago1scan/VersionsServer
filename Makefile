@@ -1,22 +1,21 @@
 # Encuentra todos los archivos .c en el directorio actual y subdirectorios
 SRC := $(shell find . -name '*.c')
-
 # Genera los nombres de los archivos .o correspondientes
 OBJ := $(SRC:.c=.o)
 
 all: rversions rversionsd
 
-#compila version del cliente
+# Compila versión del cliente
 rversions: rversions.o client/versions_client.o common/sha256.o common/protocol.o
-	gcc -o rversions rversions.o client/versions_client.o common/sha256.o common/protocol.o
+	gcc -g -o rversions rversions.o client/versions_client.o common/sha256.o common/protocol.o
 
-#compila version del servidor
+# Compila versión del servidor
 rversionsd: rversionsd.o server/versions_server.o common/sha256.o common/protocol.o
-	gcc -o rversionsd rversionsd.o server/versions_server.o common/sha256.o common/protocol.o
+	gcc -g -o rversionsd rversionsd.o server/versions_server.o common/sha256.o common/protocol.o
 
 # Regla genérica para compilar .c a .o
 %.o: %.c
-	gcc -c $< -o $@
+	gcc -g -c $< -o $@
 
 clean:
 	find . -name '*.o' -exec rm -f {} +
