@@ -171,7 +171,7 @@ return_code add(char * filename, char * comment, int client_socket) {
 		printf("-------------Error al agregar-------- \n");
 		return VERSION_ERROR;
 	}
-	printf("--------Se recibio el satus code del servidor archivo agregado------- \n");
+	printf("--------Se  agrego el archivo al serividor ------- \n");
 	// Si la operacion es exitosa, retorna VERSION_ADDED
 	return VERSION_ADDED;
 }
@@ -215,7 +215,7 @@ void list(char * filename, int socket) {
 		
 	}while(1);
 	if(count == 0 ){
-		printf("------no se encontro versionse a listar ------\n");
+		printf("------no se encontaron versiones a listar ------\n");
 	}
 }
 
@@ -302,7 +302,7 @@ int get(char * filename, int version, int socket) {
 		printf("------Error al recibir el archivo---------- \n");
 		return VERSION_ERROR;
 	}
-
+	printf("----------------Version recuperada --------\n ");
 	return VERSION_ADDED;
 
 }
@@ -323,7 +323,7 @@ int retrieve_file(char * hash, char * filename, int socket, int sizeFile) {
 int getFileSize(char * filename){
 	struct stat st;
 	if(stat(filename, &st) != 0){
-		perror("-------error obtener tamaño del archivo -------");
+		perror("-------error obtener tamaño del archivo ------- \n");
 		return -1;
 	}
 	return st.st_size;
