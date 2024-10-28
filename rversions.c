@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
 	while (1) {
 		type_request peticionRequest;
 		printf("Ingrese la orden \n");
-
+		printf("->  ");
 		fgets(line, LINESIZE, stdin);
 		line[strlen(line) - 1] = '\0';
 
@@ -167,7 +167,7 @@ status_operation_socket actionAdd(char * argument2, char * argument3, int idClie
 	peticion.idUser = idClient;
 	
 	if(validate_exist(argument2) == VERSION_ERROR){
-		printf("el documento no existe o es inaccesible \n ");
+		printf("---------------el documento no existe o es inaccesible------------------- \n ");
 		return ERROR;
 	}
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
@@ -189,7 +189,7 @@ status_operation_socket actionGet(char * argument2, char * argument3, int idClie
 	peticion.idUser = idClient;
 	int version = atoi(argument2);
 	if(version == 0){
-		printf("Escriba una version numerica \n");
+		printf("----------------Escriba una version numerica -----------------------\n");
 		return ERROR;
 	}
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
@@ -198,7 +198,7 @@ status_operation_socket actionGet(char * argument2, char * argument3, int idClie
 		return ERROR;
 	}
 	if(get(argument3, version, client_socket)== 0){
-		printf("Error in get \n");
+		printf("--------Error in get ----------------\n");
 		return ERROR;
 	}	
 	return restult_first_request;
@@ -212,7 +212,6 @@ status_operation_socket actionList(char * argument2, int idClient, int client_so
 	peticion.idUser = idClient;
 	status_operation_socket restult_first_request = send_first_request(client_socket, &peticion);
 	if(restult_first_request != OK){
-		printf("Error");
 		return ERROR;
 	}
 
