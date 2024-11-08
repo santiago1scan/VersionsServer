@@ -299,18 +299,22 @@ return_code get(int socket, int idCliente) {
 				continue;
 			}
 
+			char src_filename[PATH_MAX];
+			snprintf(src_filename, PATH_MAX, "%s/%s", VERSIONS_DIR, r.hash);
+
 			struct stat st;
-			if (stat(r.filename, &st) != 0) {
+			if (stat(src_filename, &st) != 0) {
 				pthread_mutex_unlock(&mutexDB);
 				return VERSION_ERROR;
 			}
+
 			file_transfer.filseSize = st.st_size;
 			
 			if( send_file_transfer(socket, &file_transfer) != OK){
 				pthread_mutex_unlock(&mutexDB);
 				return VERSION_ERROR;
 			}			
-			
+
 			if( retrieve_file(r.hash, socket, st.st_size) != OK){
 				pthread_mutex_unlock(&mutexDB);
 				return VERSION_ERROR;
